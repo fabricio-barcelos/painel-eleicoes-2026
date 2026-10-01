@@ -1,0 +1,6 @@
+{
+  "name": "painel-eleicoes-2026",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node dev.mjs" }
+}

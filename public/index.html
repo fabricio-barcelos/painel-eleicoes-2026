@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apuração 2026 · Espírito Santo</title>
+<meta name="description" content="Acompanhamento em tempo real da apuração das Eleições 2026: Presidente e Espírito Santo. Dados oficiais do TSE.">
+<style>
+:root{
+  --bg:#f3f1ec; --card:#fffdf9; --ink:#17201c; --mute:#5d6a63; --line:#dedad0;
+  --track:#e9e5db; --bar:#9aa59f; --lead:#0f6b4f; --lead-soft:#d9ece4;
+  --warn:#8a5a00; --warn-bg:#fbefcf; --ok:#0f6b4f; --bad:#a3312a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#101412; --card:#181d1a; --ink:#e9ece8; --mute:#93a09a; --line:#2a322e;
+  --track:#232a26; --bar:#55615b; --lead:#4fc39b; --lead-soft:#17352b;
+  --warn:#f0c869; --warn-bg:#3a2e10; --ok:#4fc39b; --bad:#f08a80;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+h1{font-size:clamp(22px,3.4vw,34px);line-height:1.05;margin:0;letter-spacing:-.02em;font-weight:800}
+h1 small{display:block;font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.status{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font:12px/1.3 var(--mono);color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;letter-spacing:.04em}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.pill.live .dot{background:var(--ok);animation:pulse 1.6s infinite}
+.pill.sim{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.pill.err .dot{background:var(--bad)}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.pill.live .dot{animation:none}.fill{transition:none!important}}
+.aviso{margin:16px 0 0;padding:10px 14px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:14px}
+.aviso[hidden]{display:none}
+h2{font:700 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:30px 0 12px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 12px;min-width:0}
+.card h3{margin:0;font-size:18px;letter-spacing:-.01em}
+.card .sub{color:var(--mute);font-size:13px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.tag{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:5px;background:var(--lead-soft);color:var(--lead);white-space:nowrap}
+.tag.neutro{background:var(--track);color:var(--mute)}
+.apur{margin:12px 0 6px}
+.apur .n{display:flex;justify-content:space-between;align-items:baseline;font:12px/1 var(--mono);color:var(--mute);margin-bottom:6px}
+.apur .n b{font-size:20px;color:var(--ink);font-weight:700}
+.track{height:6px;border-radius:3px;background:var(--track);overflow:hidden;position:relative}
+.fill{height:100%;background:var(--ink);border-radius:3px;transition:width .6s ease}
+ol{list-style:none;margin:10px 0 0;padding:0}
+li.c{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--line)}
+li.c .nome{font-weight:650;overflow-wrap:anywhere}
+li.c .nome span{font-weight:400;color:var(--mute);font-size:13px}
+li.c .pct{font:700 17px/1.2 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+li.c .meta{font-size:12px;color:var(--mute);overflow-wrap:anywhere}
+li.c .vt{font:12px/1.4 var(--mono);color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
+li.c .track{grid-column:1/-1;margin-top:4px;height:8px}
+li.c .fill{background:var(--bar)}
+li.c.lider .fill{background:var(--lead)}
+li.c.lider .pct{color:var(--lead)}
+.track.meio::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--card)}
+.sel{display:inline-block;font:700 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 5px;border-radius:4px;background:var(--lead);color:var(--card);margin-left:6px;vertical-align:2px}
+li.c .nome .sel,td .sel{color:var(--card);font-size:10px;font-weight:700}
+.rod{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font:12px/1.4 var(--mono);color:var(--mute)}
+button{font:inherit;color:inherit;cursor:pointer}
+.mais{background:none;border:0;padding:8px 0 0;font-size:13px;color:var(--lead);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips button{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:14px}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+button:focus-visible{outline:2px solid var(--lead);outline-offset:2px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+td{padding:6px 0;border-top:1px solid var(--line);vertical-align:baseline}
+td.k{font:12px/1 var(--mono);color:var(--mute);width:28px}
+td.r{text-align:right;font:13px/1.2 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
+td span{color:var(--mute);font-size:12px}
+.vazio{color:var(--mute);padding:18px 0;font-size:14px}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:12px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small>Eleições 2026 · 1º turno · 4 de outubro</small>Apuração em tempo real<br>Presidente e Espírito Santo</h1>
+    <div class="status" aria-live="polite">
+      <span class="pill" id="fonte"><span class="dot"></span><span id="fonteTxt">Conectando…</span></span>
+      <span id="hora">—</span>
+      <span id="prox"></span>
+    </div>
+  </header>
+  <p class="aviso" id="aviso" hidden></p>
+
+  <h2>Presidente da República</h2>
+  <div class="grid">
+    <section class="card" id="presidenteBR"></section>
+    <section class="card" id="presidenteES"></section>
+  </div>
+
+  <h2>Espírito Santo</h2>
+  <div class="grid">
+    <section class="card" id="governador"></section>
+    <section class="card" id="senador"></section>
+  </div>
+
+  <h2>Por município</h2>
+  <div class="chips" id="chips" role="group" aria-label="Município"></div>
+  <div class="grid">
+    <section class="card" id="munPresidente"></section>
+    <section class="card" id="munGovernador"></section>
+    <section class="card" id="munSenador"></section>
+  </div>
+
+  <h2>Câmara e Assembleia · mais votados no ES</h2>
+  <div class="grid">
+    <section class="card" id="depFederal"></section>
+    <section class="card" id="depEstadual"></section>
+  </div>
+
+  <footer>
+    Fonte: Tribunal Superior Eleitoral, arquivos de divulgação de resultados (<a href="https://resultados.tse.jus.br" rel="noopener">resultados.tse.jus.br</a>).
+    Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var INTERVALO = 30;
+  var params = new URLSearchParams(location.search);
+  var fontePedida = params.get('fonte') || '';
+  var mun = params.get('mun') || localStorageGet('mun') || '57037';
+  var abertos = {};
+  var restante = 0, timer = null, ultimo = null;
+
+  var TITULOS = {
+    presidenteBR:['Brasil','Presidente · total nacional'],
+    presidenteES:['Votos do Espírito Santo','Presidente · só o eleitorado capixaba'],
+    governador:['Governador','Espírito Santo'],
+    senador:['Senador','Espírito Santo · 2 vagas'],
+    munPresidente:['Presidente',''],
+    munGovernador:['Governador',''],
+    munSenador:['Senador',''],
+    depFederal:['Deputado federal','10 vagas'],
+    depEstadual:['Deputado estadual','30 vagas']
+  };
+  var MAJ = ['presidenteBR','presidenteES','governador','senador','munPresidente','munGovernador','munSenador'];
+  var nf = new Intl.NumberFormat('pt-BR');
+
+  function localStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function localStorageSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+  function num(s){return parseFloat(String(s).replace('.','').replace(',','.'))||0}
+  function $(id){return document.getElementById(id)}
+
+  function situacao(b,id){
+    if(b.andamento==='n') return ['Aguardando','neutro'];
+    var pres = id.indexOf('residente')>-1;
+    if(b.matDefinido==='e') return ['Definido: eleito',''];
+    if(b.matDefinido==='s') return ['Definido: 2º turno',''];
+    if(b.totalizacaoFinal && !(pres && id!=='presidenteBR')) return ['Resultado final',''];
+    if(b.andamento==='f') return ['100% apurado',''];
+    return ['Em apuração','neutro'];
+  }
+
+  function cabecalho(card,id,b,sub){
+    var top = el('div','top');
+    var t = el('div');
+    t.appendChild(el('h3',null,TITULOS[id][0]));
+    t.appendChild(el('div','sub',sub || TITULOS[id][1]));
+    top.appendChild(t);
+    var s = situacao(b,id);
+    top.appendChild(el('span','tag '+s[1],s[0]));
+    card.appendChild(top);
+
+    var ap = el('div','apur');
+    var n = el('div','n');
+    var esq = el('span'); esq.appendChild(el('b',null,b.secoes.pct+'%')); esq.appendChild(document.createTextNode(' das seções'));
+    n.appendChild(esq);
+    n.appendChild(el('span',null,nf.format(b.secoes.totalizadas)+' de '+nf.format(b.secoes.total)));
+    ap.appendChild(n);
+    var tr = el('div','track'); var f = el('div','fill'); f.style.width = num(b.secoes.pct)+'%'; tr.appendChild(f); ap.appendChild(tr);
+    card.appendChild(ap);
+  }
+
+  function rodape(card,b){
+    var r = el('div','rod');
+    r.appendChild(el('span',null,'Brancos '+b.votos.pctBrancos+'%'));
+    r.appendChild(el('span',null,'Nulos '+b.votos.pctNulos+'%'));
+    r.appendChild(el('span',null,'Abstenção '+b.eleitorado.pctAbstencao+'%'));
+    r.appendChild(el('span',null,'Válidos '+nf.format(b.votos.validos)));
+    card.appendChild(r);
+  }
+
+  function selo(c,b,i){
+    if(c.st==='Eleito'||c.st==='Eleito por QP'||c.st==='Eleito por média') return 'Eleito';
+    if(c.st==='2º turno') return '2º turno';
+    if(!b.totalizacaoFinal && b.matDefinido==='e' && c.eleito) return 'Eleito';
+    if(!b.totalizacaoFinal && b.matDefinido==='s' && c.eleito) return '2º turno';
+    return '';
+  }
+
+  function majoritario(id,b,sub){
+    var card = $(id); card.textContent='';
+    cabecalho(card,id,b,sub);
+    var temVoto = b.votos.total>0;
+    var lista = el('ol');
+    var limite = abertos[id] ? b.cands.length : Math.min(b.cands.length, b.vagas>1?6:5);
+    var escala = b.vagas>1 ? Math.max(num(b.cands[0] && b.cands[0].pct),1) : 100;
+    b.cands.slice(0,limite).forEach(function(c,i){
+      var li = el('li','c'+(temVoto && i<b.vagas?' lider':''));
+      var nome = el('div','nome',c.nome+' ');
+      nome.appendChild(el('span',null,c.partido));
+      var s = selo(c,b,i); if(s) nome.appendChild(el('span','sel',s));
+      li.appendChild(nome);
+      li.appendChild(el('div','pct',c.pct+'%'));
+      var meta = [];
+      if(c.vice.length) meta.push((b.vagas>1?'Suplentes: ':'Vice: ')+c.vice.join(', '));
+      if(c.dvt && c.dvt!=='Válido') meta.push(c.dvt);
+      li.appendChild(el('div','meta',meta.join(' · ')));
+      li.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
+      var tr = el('div','track'+(b.vagas===1?' meio':''));
+      var f = el('div','fill'); f.style.width = Math.min(100,num(c.pct)/escala*100)+'%';
+      tr.appendChild(f); li.appendChild(tr);
+      lista.appendChild(li);
+    });
+    card.appendChild(lista);
+    if(b.cands.length>limite || abertos[id]){
+      var bt = el('button','mais',abertos[id]?'Mostrar menos':'Ver todos os '+b.cands.length+' candidatos');
+      bt.type='button';
+      bt.onclick=function(){abertos[id]=!abertos[id]; if(ultimo) desenhar(ultimo)};
+      card.appendChild(bt);
+    }
+    rodape(card,b);
+  }
+
+  function proporcional(id,b){
+    var card = $(id); card.textContent='';
+    cabecalho(card,id,b,b.vagas+' vagas · '+b.totalCandidatos+' candidatos');
+    var limite = abertos[id] ? b.cands.length : 12;
+    var tb = el('table'); var corpo = el('tbody');
+    b.cands.slice(0,limite).forEach(function(c,i){
+      var tr = el('tr');
+      tr.appendChild(el('td','k',String(i+1)));
+      var td = el('td',null,c.nome+' ');
+      td.appendChild(el('span',null,c.partido));
+      var s = selo(c,b,i); if(s) td.appendChild(el('span','sel',s));
+      tr.appendChild(td);
+      tr.appendChild(el('td','r',nf.format(c.votos)));
+      tr.appendChild(el('td','r',c.pct+'%'));
+      corpo.appendChild(tr);
+    });
+    tb.appendChild(corpo); card.appendChild(tb);
+    var bt = el('button','mais',abertos[id]?'Mostrar menos':'Ver os '+b.cands.length+' mais votados');
+    bt.type='button';
+    bt.onclick=function(){abertos[id]=!abertos[id]; if(ultimo) desenhar(ultimo)};
+    card.appendChild(bt);
+    if(b.partidos && b.partidos.length){
+      var r = el('div','rod');
+      r.appendChild(el('span',null,'Partidos: '+b.partidos.slice(0,6).map(function(p){return p.sg+' '+nf.format(p.votos)}).join(' · ')));
+      card.appendChild(r);
+    }
+  }
+
+  function falta(id,erro){
+    var card = $(id); card.textContent='';
+    card.appendChild(el('h3',null,TITULOS[id][0]));
+    card.appendChild(el('div','vazio','Dados indisponíveis no TSE neste momento'+(erro?' (erro '+erro+')':'')+'. Nova tentativa na próxima atualização.'));
+  }
+
+  function chips(d){
+    var box = $('chips'); box.textContent='';
+    Object.keys(d.municipios).forEach(function(cd){
+      var b = el('button',null,d.municipios[cd]); b.type='button';
+      b.setAttribute('aria-pressed', String(cd===d.municipio.cd));
+      b.onclick=function(){mun=cd; localStorageSet('mun',cd); buscar()};
+      box.appendChild(b);
+    });
+  }
+
+  function desenhar(d){
+    ultimo = d;
+    chips(d);
+    MAJ.forEach(function(id){
+      var b = d.blocos[id];
+      if(!b) return falta(id,d.erros[id]);
+      majoritario(id,b, id.indexOf('mun')===0 ? d.municipio.nome+(id==='munSenador'?' · 2 vagas':'') : null);
+    });
+    ['depFederal','depEstadual'].forEach(function(id){
+      var b = d.blocos[id];
+      if(!b) return falta(id,d.erros[id]);
+      proporcional(id,b);
+    });
+
+    var p = d.blocos.presidenteBR || d.blocos.governador;
+    var pill = $('fonte');
+    var sim = d.fonte==='simulado';
+    var aoVivo = p && p.andamento==='p';
+    pill.className = 'pill'+(sim?' sim':aoVivo?' live':'');
+    $('fonteTxt').textContent = sim ? 'SIMULADO TSE' : aoVivo ? 'AO VIVO · TSE' : 'OFICIAL · TSE';
+    $('hora').textContent = p && p.atualizado ? 'Última totalização '+p.atualizado.slice(11,16)+' de '+p.atualizado.slice(0,5) : 'Sem totalização ainda';
+
+    var av = $('aviso'); av.hidden = true;
+    if(sim){
+      av.textContent = 'Dados de teste do simulado do TSE, com candidatos fictícios. Não são resultados reais.';
+      av.hidden = false;
+    } else if(p && p.andamento==='n'){
+      av.textContent = 'A apuração ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 4 de outubro, e esta página passa a se atualizar sozinha.';
+      av.hidden = false;
+    } else if(p && !p.podeDivulgar){
+      av.textContent = 'A votação para presidente só pode ser divulgada após o fechamento das urnas em todo o país.';
+      av.hidden = false;
+    }
+  }
+
+  function buscar(){
+    clearInterval(timer);
+    $('prox').textContent = 'Atualizando…';
+    var q = '/api/painel?mun='+encodeURIComponent(mun)+(fontePedida?'&fonte='+encodeURIComponent(fontePedida):'');
+    fetch(q,{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    }).then(function(d){
+      desenhar(d);
+    }).catch(function(){
+      $('fonte').className='pill err';
+      $('fonteTxt').textContent = 'SEM CONEXÃO';
+      if(!ultimo) MAJ.concat(['depFederal','depEstadual']).forEach(function(id){falta(id)});
+    }).then(agendar);
+  }
+
+  function agendar(){
+    restante = INTERVALO;
+    clearInterval(timer);
+    timer = setInterval(function(){
+      if(document.hidden) return;
+      restante--;
+      $('prox').textContent = 'Próxima atualização em '+restante+'s';
+      if(restante<=0) buscar();
+    },1000);
+  }
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && restante<=0) buscar(); });
+  buscar();
+})();
+</script>
+</body>
+</html>
