@@ -5,82 +5,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apuração 2026 · Espírito Santo</title>
 <meta name="description" content="Acompanhamento em tempo real da apuração das Eleições 2026: Presidente e Espírito Santo. Dados oficiais do TSE.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f3f1ec; --card:#fffdf9; --ink:#17201c; --mute:#5d6a63; --line:#dedad0;
-  --track:#e9e5db; --bar:#9aa59f; --lead:#0f6b4f; --lead-soft:#d9ece4;
-  --warn:#8a5a00; --warn-bg:#fbefcf; --ok:#0f6b4f; --bad:#a3312a;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --bg:#f6f3ec; --bg2:#efeadf; --card:#fffefb; --ink:#14201b; --mute:#63706a; --line:#e2dccf;
+  --track:#ebe6da; --bar:#b3bbb6; --lead:#0c5f47; --lead-2:#1a8a68; --lead-soft:#dcefe7;
+  --gold:#9a7226; --gold-soft:#f4e9cf; --warn:#7d5200; --warn-bg:#f8ecc9; --ok:#0c5f47; --bad:#a3312a;
+  --shadow:0 1px 2px rgba(20,32,27,.04),0 8px 24px -12px rgba(20,32,27,.12);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#101412; --card:#181d1a; --ink:#e9ece8; --mute:#93a09a; --line:#2a322e;
-  --track:#232a26; --bar:#55615b; --lead:#4fc39b; --lead-soft:#17352b;
-  --warn:#f0c869; --warn-bg:#3a2e10; --ok:#4fc39b; --bad:#f08a80;
+  --bg:#0b100e; --bg2:#0f1512; --card:#141b18; --ink:#eef1ed; --mute:#8f9c96; --line:#232c28;
+  --track:#1e2622; --bar:#4b5650; --lead:#5fd3aa; --lead-2:#2fa37f; --lead-soft:#143328;
+  --gold:#d9b25f; --gold-soft:#2c2412; --warn:#f0c869; --warn-bg:#2f2610; --ok:#5fd3aa; --bad:#f08a80;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -16px rgba(0,0,0,.7);
 }}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1320px;margin:0 auto;padding:20px 16px 48px}
-header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid var(--ink)}
-h1{font-size:clamp(22px,3.4vw,34px);line-height:1.05;margin:0;letter-spacing:-.02em;font-weight:800}
-h1 small{display:block;font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
-.status{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font:12px/1.3 var(--mono);color:var(--mute)}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;letter-spacing:.04em}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);background-image:linear-gradient(180deg,var(--bg2),var(--bg) 420px);background-repeat:no-repeat;color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 20px 40px}
+@media (max-width:560px){.wrap{padding:20px 16px 32px}}
+header{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between;padding-bottom:22px;border-bottom:1px solid var(--line);position:relative}
+header::after{content:"";position:absolute;left:0;bottom:-1px;width:96px;height:3px;background:var(--gold);border-radius:2px}
+h1{font:600 clamp(28px,4.6vw,52px)/1.02 var(--serif);margin:0;letter-spacing:-.025em;text-wrap:balance}
+h1 small{display:block;font:500 11.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+h1 em{font-style:italic;font-weight:500;color:var(--lead)}
+.status{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font:12px/1.3 var(--mono);color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;letter-spacing:.08em;box-shadow:var(--shadow)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
-.pill.live .dot{background:var(--ok);animation:pulse 1.6s infinite}
+.pill.live{border-color:transparent;background:var(--lead);color:var(--card)}
+.pill.live .dot{background:var(--card);animation:pulse 1.4s infinite}
 .pill.sim{background:var(--warn-bg);color:var(--warn);border-color:transparent}
 .pill.err .dot{background:var(--bad)}
-@keyframes pulse{50%{opacity:.25}}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
 @media (prefers-reduced-motion:reduce){.pill.live .dot{animation:none}.fill{transition:none!important}}
-.aviso{margin:16px 0 0;padding:10px 14px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:14px}
+.aviso{margin:20px 0 0;padding:12px 16px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:14px;border-left:3px solid var(--gold)}
 .aviso[hidden]{display:none}
-h2{font:700 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:30px 0 12px}
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 12px;min-width:0}
-.card h3{margin:0;font-size:18px;letter-spacing:-.01em}
-.card .sub{color:var(--mute);font-size:13px}
+.resumo{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));margin-top:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);min-width:0}
+.kpi .l{font:500 10.5px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.kpi .v{font:600 clamp(26px,3vw,34px)/1.1 var(--serif);letter-spacing:-.02em;margin-top:8px;overflow-wrap:anywhere}
+.kpi .v.num{font-family:var(--mono);font-weight:700;font-size:clamp(24px,2.8vw,30px);font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12.5px;color:var(--mute);margin-top:4px}
+.kpi .track{margin-top:10px}
+h2{display:flex;align-items:center;gap:14px;font:600 clamp(19px,2.2vw,24px)/1.1 var(--serif);letter-spacing:-.01em;margin:40px 0 16px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 20px 14px;min-width:0;box-shadow:var(--shadow)}
+.card h3{margin:0;font:600 21px/1.15 var(--serif);letter-spacing:-.015em}
+.card .sub{color:var(--mute);font-size:13px;margin-top:3px}
 .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.tag{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:5px;background:var(--lead-soft);color:var(--lead);white-space:nowrap}
+.tag{font:700 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 8px;border-radius:6px;background:var(--lead-soft);color:var(--lead);white-space:nowrap}
 .tag.neutro{background:var(--track);color:var(--mute)}
-.apur{margin:12px 0 6px}
-.apur .n{display:flex;justify-content:space-between;align-items:baseline;font:12px/1 var(--mono);color:var(--mute);margin-bottom:6px}
+.apur{margin:16px 0 4px;padding:12px 14px;border-radius:10px;background:var(--bg2)}
+.apur .n{display:flex;justify-content:space-between;align-items:baseline;font:12px/1 var(--mono);color:var(--mute);margin-bottom:8px}
 .apur .n b{font-size:20px;color:var(--ink);font-weight:700}
-.track{height:6px;border-radius:3px;background:var(--track);overflow:hidden;position:relative}
-.fill{height:100%;background:var(--ink);border-radius:3px;transition:width .6s ease}
-ol{list-style:none;margin:10px 0 0;padding:0}
-li.c{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--line)}
-li.c .nome{font-weight:650;overflow-wrap:anywhere}
-li.c .nome span{font-weight:400;color:var(--mute);font-size:13px}
-li.c .pct{font:700 17px/1.2 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.track{height:6px;border-radius:99px;background:var(--track);overflow:hidden;position:relative}
+.fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold));border-radius:99px;transition:width .7s cubic-bezier(.2,.7,.2,1)}
+ol{list-style:none;margin:6px 0 0;padding:0;counter-reset:pos}
+li.c{counter-increment:pos;position:relative;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0 12px 34px;border-top:1px solid var(--line)}
+li.c:first-child{border-top:0}
+li.c::before{content:counter(pos);position:absolute;left:0;top:13px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 var(--mono);color:var(--mute);background:var(--track)}
+li.c.lider::before{background:var(--lead);color:var(--card)}
+li.c .nome{font-weight:650;font-size:15.5px;overflow-wrap:anywhere}
+li.c .nome span{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.02em}
+li.c .pct{font:700 18px/1.2 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 li.c .meta{font-size:12px;color:var(--mute);overflow-wrap:anywhere}
 li.c .vt{font:12px/1.4 var(--mono);color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
-li.c .track{grid-column:1/-1;margin-top:4px;height:8px}
+li.c .track{grid-column:1/-1;margin-top:6px;height:8px}
 li.c .fill{background:var(--bar)}
-li.c.lider .fill{background:var(--lead)}
+li.c.lider .fill{background:linear-gradient(90deg,var(--lead-2),var(--lead))}
 li.c.lider .pct{color:var(--lead)}
+li.c.lider .nome{font-size:16.5px}
 .track.meio::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--card)}
-.sel{display:inline-block;font:700 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 5px;border-radius:4px;background:var(--lead);color:var(--card);margin-left:6px;vertical-align:2px}
+.sel{display:inline-block;font:700 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:4px;background:var(--gold);margin-left:6px;vertical-align:2px}
 li.c .nome .sel,td .sel{color:var(--card);font-size:10px;font-weight:700}
-.rod{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font:12px/1.4 var(--mono);color:var(--mute)}
+.rod{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line);font:11.5px/1.5 var(--mono);color:var(--mute)}
 button{font:inherit;color:inherit;cursor:pointer}
-.mais{background:none;border:0;padding:8px 0 0;font-size:13px;color:var(--lead);font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.chips button{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:14px}
+.mais{background:none;border:0;padding:10px 0 2px;font-size:13px;color:var(--lead);font-weight:600}
+.mais:hover{text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chips button{padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500;transition:border-color .15s,background .15s}
+.chips button:hover{border-color:var(--gold)}
 .chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
-button:focus-visible{outline:2px solid var(--lead);outline-offset:2px}
-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
-td{padding:6px 0;border-top:1px solid var(--line);vertical-align:baseline}
-td.k{font:12px/1 var(--mono);color:var(--mute);width:28px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+td{padding:8px 0;border-top:1px solid var(--line);vertical-align:baseline}
+tr:first-child td{border-top:0}
+td.k{font:11px/1 var(--mono);color:var(--mute);width:28px}
 td.r{text-align:right;font:13px/1.2 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
 td span{color:var(--mute);font-size:12px}
 .vazio{color:var(--mute);padding:18px 0;font-size:14px}
-footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:12px}
+footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:18px 40px;justify-content:space-between;align-items:flex-end;color:var(--mute);font-size:12.5px}
 footer a{color:inherit}
+footer .fonte{max-width:62ch}
+.credito{text-align:right}
+.credito .por{font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.credito .marca{display:block;font:600 24px/1.1 var(--serif);letter-spacing:-.01em;color:var(--ink);margin-top:8px;text-decoration:none}
+.credito .marca b{color:var(--gold);font-weight:600}
+.credito .tagline{margin-top:4px}
+@media (max-width:640px){.credito{text-align:left}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1><small>Eleições 2026 · 1º turno · 4 de outubro</small>Apuração em tempo real<br>Presidente e Espírito Santo</h1>
+    <h1><small>Eleições 2026 · 1º turno · 4 de outubro</small>Apuração em tempo real<br><em>Presidente</em> e <em>Espírito Santo</em></h1>
     <div class="status" aria-live="polite">
       <span class="pill" id="fonte"><span class="dot"></span><span id="fonteTxt">Conectando…</span></span>
       <span id="hora">—</span>
@@ -88,6 +122,7 @@ footer a{color:inherit}
     </div>
   </header>
   <p class="aviso" id="aviso" hidden></p>
+  <div class="resumo" id="resumo"></div>
 
   <h2>Presidente da República</h2>
   <div class="grid">
@@ -116,8 +151,15 @@ footer a{color:inherit}
   </div>
 
   <footer>
-    Fonte: Tribunal Superior Eleitoral, arquivos de divulgação de resultados (<a href="https://resultados.tse.jus.br" rel="noopener">resultados.tse.jus.br</a>).
-    Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos.
+    <div class="fonte">
+      Fonte: Tribunal Superior Eleitoral, arquivos oficiais de divulgação de resultados (<a href="https://resultados.tse.jus.br" rel="noopener">resultados.tse.jus.br</a>).
+      Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos.
+    </div>
+    <div class="credito">
+      <span class="por">Desenvolvido por</span>
+      <a class="marca" href="https://www.instagram.com/barcelos.estrategia" rel="noopener" target="_blank">Barcelos <b>Estratégia</b></a>
+      <div class="tagline">Licitações e contratos públicos · @barcelos.estrategia · © 2026</div>
+    </div>
   </footer>
 </div>
 
@@ -275,8 +317,28 @@ footer a{color:inherit}
     });
   }
 
+
+  function kpi(box,l,v,d,pct,num){
+    var k = el('div','kpi'); k.appendChild(el('div','l',l));
+    k.appendChild(el('div','v'+(num?' num':''),v)); if(d) k.appendChild(el('div','d',d));
+    if(pct!=null){var tr=el('div','track');var f=el('div','fill');f.style.width=pct+'%';tr.appendChild(f);k.appendChild(tr)}
+    box.appendChild(k);
+  }
+  function resumo(d){
+    var box = $('resumo'); box.textContent='';
+    var br = d.blocos.presidenteBR, gv = d.blocos.governador;
+    if(br) kpi(box,'Brasil apurado',br.secoes.pct+'%',nf.format(br.secoes.totalizadas)+' de '+nf.format(br.secoes.total)+' seções',num(br.secoes.pct),true);
+    if(gv) kpi(box,'Espírito Santo apurado',gv.secoes.pct+'%',nf.format(gv.secoes.totalizadas)+' de '+nf.format(gv.secoes.total)+' seções',num(gv.secoes.pct),true);
+    [[br,'Lidera para presidente'],[gv,'Lidera para governador do ES']].forEach(function(x){
+      var b=x[0]; if(!b) return;
+      if(b.votos.total>0 && b.cands[0]) kpi(box,x[1],b.cands[0].nome,b.cands[0].partido+' · '+b.cands[0].pct+'% dos válidos');
+      else kpi(box,x[1],'—','Aguardando os primeiros votos');
+    });
+  }
+
   function desenhar(d){
     ultimo = d;
+    resumo(d);
     chips(d);
     MAJ.forEach(function(id){
       var b = d.blocos[id];
