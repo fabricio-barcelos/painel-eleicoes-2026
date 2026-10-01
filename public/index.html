@@ -163,6 +163,12 @@ table.banc tr.zero td{color:var(--mute)}
 .chips select{font:inherit;font-weight:700;color:var(--ink);background:var(--card);border:2px solid var(--gold);border-radius:10px;padding:10px 14px;min-width:min(100%,320px);cursor:pointer}
 .chips select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .chips .qt{font-size:13px;color:var(--mute)}
+.resumo{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+.resumo .par{display:grid;grid-template-columns:1fr 1fr;background:#000;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);min-width:0}
+.resumo .par .kpi{border:0;border-radius:0;box-shadow:none;background:transparent}
+.resumo .par .kpi+.kpi{border-left:1px solid #AA8800}
+@media (prefers-color-scheme:dark){.resumo .par{background:#111;outline:1px solid #AA8800}}
+@media (max-width:420px){.resumo .par{grid-template-columns:1fr}.resumo .par .kpi+.kpi{border-left:0;border-top:1px solid #AA8800}}
 </style>
 </head>
 <body>
@@ -439,13 +445,12 @@ table.banc tr.zero td{color:var(--mute)}
   }
   function resumo(d){
     var box = $('resumo'); box.textContent='';
-    var br = d.blocos.presidenteBR, gv = d.blocos.governador;
-    if(br) kpi(box,'Brasil apurado',br.secoes.pct+'%',nf.format(br.secoes.totalizadas)+' de '+nf.format(br.secoes.total)+' seções',num(br.secoes.pct),true);
-    if(gv) kpi(box,'Espírito Santo apurado',gv.secoes.pct+'%',nf.format(gv.secoes.totalizadas)+' de '+nf.format(gv.secoes.total)+' seções',num(gv.secoes.pct),true);
-    [[br,'Lidera para presidente'],[gv,'Lidera para governador do ES']].forEach(function(x){
+    [[d.blocos.presidenteBR,'Brasil apurado','Lidera para presidente'],[d.blocos.governador,'Espírito Santo apurado','Lidera para governador do ES']].forEach(function(x){
       var b=x[0]; if(!b) return;
-      if(b.votos.total>0 && b.cands[0]) kpi(box,x[1],b.cands[0].nome,b.cands[0].partido+' · '+b.cands[0].pct+'% dos válidos');
-      else kpi(box,x[1],'—','Aguardando os primeiros votos');
+      var par = el('div','par'); box.appendChild(par);
+      kpi(par,x[1],b.secoes.pct+'%',nf.format(b.secoes.totalizadas)+' de '+nf.format(b.secoes.total)+' seções',num(b.secoes.pct),true);
+      if(b.votos.total>0 && b.cands[0]) kpi(par,x[2],b.cands[0].nome,b.cands[0].partido+' · '+b.cands[0].pct+'% dos válidos');
+      else kpi(par,x[2],'—','Aguardando os primeiros votos');
     });
   }
 
