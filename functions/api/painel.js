@@ -3,6 +3,8 @@
 // pacote para o painel. O resultado fica 30 s em cache na borda da Cloudflare,
 // então o TSE recebe no máximo ~10 requisições a cada 30 s, seja qual for a audiência.
 
+import { projetarProporcional } from '../../lib/proporcional.js';
+
 const FONTES = {
   oficial: {
     base: 'https://resultados.tse.jus.br/oficial/ele2026',
@@ -171,7 +173,13 @@ export async function montarPainel(fonte, mun) {
   const erros = {};
   chaves.forEach((k, i) => {
     const r = respostas[i];
-    if (r.dados) blocos[k] = enxugar(r.dados, pedidos[k][3]);
+    if (r.dados) {
+      blocos[k] = enxugar(r.dados, pedidos[k][3]);
+      if (pedidos[k][3]) {
+        const pr = projetarProporcional(r.dados);
+        if (pr) { delete pr._confere; delete pr._eleitosN; blocos[k].projecao = pr; }
+      }
+    }
     else erros[k] = r.erro;
   });
   return {

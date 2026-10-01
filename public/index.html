@@ -149,6 +149,14 @@ li.c .pct{font-size:20px}
 .credito .selo img{display:block;height:72px;width:auto}
 @media (max-width:560px){.faixa .logo img{height:52px}}
 .credito .por{display:block}
+.proj{margin-top:12px;padding:10px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);border-radius:0 8px 8px 0;font-size:14px}
+.card h4{margin:18px 0 2px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+table.banc th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;background:#000;color:#fff;padding:6px 8px;text-align:left}
+table.banc th.r{text-align:right}
+table.banc td{padding:7px 8px}
+table.banc td.t{font-weight:700;font-size:15px}
+table.banc tr.zero td{color:var(--mute)}
+.sel.med{background:var(--gold)!important;color:#000!important}
 </style>
 </head>
 <body>
@@ -185,7 +193,7 @@ li.c .pct{font-size:20px}
     <section class="card" id="munSenador"></section>
   </div>
 
-  <h2>Câmara e Assembleia · mais votados no ES</h2>
+  <h2>Câmara e Assembleia · quem entra pelo ES</h2>
   <div class="grid">
     <section class="card" id="depFederal"></section>
     <section class="card" id="depEstadual"></section>
@@ -194,7 +202,7 @@ li.c .pct{font-size:20px}
   <footer>
     <div class="fonte">
       Fonte: Tribunal Superior Eleitoral, arquivos oficiais de divulgação de resultados (<a href="https://resultados.tse.jus.br" rel="noopener">resultados.tse.jus.br</a>).
-      Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos.
+      Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos. A distribuição de cadeiras de deputado é projeção da Barcelos sobre os votos já apurados (quociente eleitoral, quociente partidário e sobras por maior média) e só se torna resultado com a totalização final do TSE.
     </div>
     <div class="credito">
       <span class="por">Elaborado por</span>
@@ -342,6 +350,63 @@ li.c .pct{font-size:20px}
     }
   }
 
+
+  function proporcional2(id,b){
+    var pr = b.projecao;
+    if(!pr) return proporcional(id,b);
+    var card = $(id); card.textContent='';
+    cabecalho(card,id,b,b.vagas+' vagas · '+b.totalCandidatos+' candidatos');
+    var fim = b.totalizacaoFinal;
+    var nota = el('div','proj');
+    nota.appendChild(el('b',null,fim?'Distribuição das cadeiras':'Projeção com os votos apurados até agora'));
+    nota.appendChild(document.createTextNode(' · quociente eleitoral '+nf.format(pr.qe)+' votos'+(fim?'':' · muda a cada atualização')));
+    card.appendChild(nota);
+
+    card.appendChild(el('h4',null,'Cadeiras por partido ou federação'));
+    var tb = el('table','banc'); var th = el('tr');
+    ['Legenda','Votos','QP','Sobras','Total'].forEach(function(t,i){var c=el('th',i?'r':null,t);th.appendChild(c)});
+    var hd = el('thead'); hd.appendChild(th); tb.appendChild(hd);
+    var corpo = el('tbody');
+    pr.bancadas.forEach(function(l){
+      var tr = el('tr'+(l.total?'':' zero'));
+      var td = el('td',null,l.nome+' ');
+      if(l.composicao) td.appendChild(el('span',null,l.composicao));
+      tr.appendChild(td);
+      tr.appendChild(el('td','r',nf.format(l.votos)));
+      tr.appendChild(el('td','r',String(l.qp)));
+      tr.appendChild(el('td','r',String(l.sobras)));
+      tr.appendChild(el('td','r t',String(l.total)));
+      corpo.appendChild(tr);
+    });
+    tb.appendChild(corpo); card.appendChild(tb);
+
+    card.appendChild(el('h4',null,(fim?'Eleitos':'Estariam eleitos agora')+' · '+pr.preenchidas+' de '+pr.vagas));
+    var limite = abertos[id] ? pr.eleitos.length : Math.min(pr.eleitos.length,10);
+    var t2 = el('table'); var c2 = el('tbody');
+    pr.eleitos.slice(0,limite).forEach(function(c,i){
+      var tr = el('tr');
+      tr.appendChild(el('td','k',String(i+1)));
+      var td = el('td',null,c.nome+' ');
+      td.appendChild(el('span',null,c.partido));
+      td.appendChild(el('span','sel'+(c.via==='QP'?'':' med'),c.via==='QP'?'QP':'Média'));
+      tr.appendChild(td);
+      tr.appendChild(el('td','r',nf.format(c.votos)));
+      c2.appendChild(tr);
+    });
+    t2.appendChild(c2); card.appendChild(t2);
+    if(pr.eleitos.length>10){
+      var bt = el('button','mais',abertos[id]?'Mostrar menos':'Ver os '+pr.eleitos.length+' nomes');
+      bt.type='button';
+      bt.onclick=function(){abertos[id]=!abertos[id]; if(ultimo) desenhar(ultimo)};
+      card.appendChild(bt);
+    }
+    if(pr.naFila.length && !fim){
+      var r = el('div','rod');
+      r.appendChild(el('span',null,'Mais perto de entrar: '+pr.naFila.map(function(c){return c.nome+' ('+c.partido+')'}).join(' · ')));
+      card.appendChild(r);
+    }
+  }
+
   function falta(id,erro){
     var card = $(id); card.textContent='';
     card.appendChild(el('h3',null,TITULOS[id][0]));
@@ -389,7 +454,7 @@ li.c .pct{font-size:20px}
     ['depFederal','depEstadual'].forEach(function(id){
       var b = d.blocos[id];
       if(!b) return falta(id,d.erros[id]);
-      proporcional(id,b);
+      proporcional2(id,b);
     });
 
     var p = d.blocos.presidenteBR || d.blocos.governador;
