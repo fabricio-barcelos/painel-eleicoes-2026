@@ -15,6 +15,7 @@ http
       return;
     }
     try {
+      if (url.pathname === '/logo.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(await readFile(new URL('./public/logo.png', import.meta.url))); return; }
       const html = await readFile(new URL('./public/index.html', import.meta.url));
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(html);
