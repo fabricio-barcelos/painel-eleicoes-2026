@@ -158,6 +158,11 @@ table.banc td.t{font-weight:700;font-size:15px}
 table.banc tr.zero td{color:var(--mute)}
 .sel.med{background:var(--gold)!important;color:#000!important}
 .faixa .lema{color:#AA8800;font-weight:700;font-size:13px}
+.chips{align-items:center;gap:12px}
+.chips label{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.chips select{font:inherit;font-weight:700;color:var(--ink);background:var(--card);border:2px solid var(--gold);border-radius:10px;padding:10px 14px;min-width:min(100%,320px);cursor:pointer}
+.chips select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.chips .qt{font-size:13px;color:var(--mute)}
 </style>
 </head>
 <body>
@@ -416,14 +421,15 @@ table.banc tr.zero td{color:var(--mute)}
 
   function chips(d){
     var box = $('chips'); box.textContent='';
-    Object.keys(d.municipios).forEach(function(cd){
-      var b = el('button',null,d.municipios[cd]); b.type='button';
-      b.setAttribute('aria-pressed', String(cd===d.municipio.cd));
-      b.onclick=function(){mun=cd; localStorageSet('mun',cd); buscar()};
-      box.appendChild(b);
+    var lab = el('label',null,'Município'); lab.setAttribute('for','selMun');
+    var sel = el('select'); sel.id='selMun';
+    Object.keys(d.municipios).sort(function(x,y){return d.municipios[x].localeCompare(d.municipios[y],'pt-BR')}).forEach(function(cd){
+      var o = el('option',null,d.municipios[cd]); o.value=cd; if(cd===d.municipio.cd) o.selected=true; sel.appendChild(o);
     });
+    sel.onchange=function(){mun=sel.value; localStorageSet('mun',mun); buscar()};
+    box.appendChild(lab); box.appendChild(sel);
+    box.appendChild(el('span','qt',Object.keys(d.municipios).length+' municípios do ES'));
   }
-
 
   function kpi(box,l,v,d,pct,num){
     var k = el('div','kpi'); k.appendChild(el('div','l',l));
@@ -488,7 +494,7 @@ table.banc tr.zero td{color:var(--mute)}
       return r.json();
     }).then(function(d){
       desenhar(d);
-    }).catch(function(){
+    }).catch(function(e){ console.error(e);
       $('fonte').className='pill err';
       $('fonteTxt').textContent = 'SEM CONEXÃO';
       if(!ultimo) MAJ.concat(['depFederal','depEstadual']).forEach(function(id){falta(id)});
