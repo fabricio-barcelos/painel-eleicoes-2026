@@ -192,6 +192,19 @@ table.vagas td.vg{font-weight:700;font-size:17px;width:46px}
 table.vagas .sel{margin-left:0;white-space:nowrap}
 table.vagas tr.corte td{border-top:2px solid var(--gold)}
 .card .prox{margin-top:10px}
+.consulta form{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.consulta label{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.consulta input{font:inherit;font-size:20px;font-weight:700;width:170px;padding:10px 14px;border:2px solid var(--gold);border-radius:10px;background:var(--card);color:var(--ink)}
+.consulta button[type=submit]{padding:12px 18px;border-radius:10px;border:0;background:#000;color:#fff;font-weight:700}
+@media (prefers-color-scheme:dark){.consulta button[type=submit]{background:var(--gold);color:#000}}
+.consulta .qt{font-size:13px;color:var(--mute);flex-basis:100%}
+.achados{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin-top:18px}
+.achado{border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;min-width:0}
+.achado .l{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.achado .nm{font-weight:700;font-size:18px;margin-top:6px;overflow-wrap:anywhere}
+.achado .nm span{font-weight:400;font-size:12.5px;color:var(--mute)}
+.achado .vt{font-weight:700;font-size:30px;margin-top:6px;font-variant-numeric:tabular-nums}
+.achado .d{font-size:13px;color:var(--mute);margin-top:2px}
 </style>
 </head>
 <body>
@@ -232,6 +245,17 @@ table.vagas tr.corte td{border-top:2px solid var(--gold)}
     <div class="lado" id="mapaLegenda"></div>
     <div class="palco" id="mapaPalco"><div class="vazio">Carregando o mapa…</div></div>
     <div class="lado" id="mapaDetalhe"></div>
+  </section>
+
+  <h2>Consulta por número do candidato</h2>
+  <section class="card consulta">
+    <form id="formCand" autocomplete="off">
+      <label for="numCand">Número do candidato</label>
+      <input id="numCand" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="Ex.: 15 ou 1234" aria-describedby="dicaCand">
+      <button type="submit">Consultar votos</button>
+      <span class="qt" id="dicaCand">2 dígitos: presidente e governador · 3: senador · 4: deputado federal · 5: deputado estadual</span>
+    </form>
+    <div id="resCand"></div>
   </section>
 
   <footer>
@@ -576,6 +600,7 @@ table.vagas tr.corte td{border-top:2px solid var(--gold)}
     ultimo = d;
     resumo(d);
     chips(); pintar(); buscarMapa();
+    if(numConsulta) consultarCand();
     MAJ.forEach(function(id){
       var b = d.blocos[id];
       if(!b) return falta(id,d.erros[id]);
@@ -607,6 +632,38 @@ table.vagas tr.corte td{border-top:2px solid var(--gold)}
       av.hidden = false;
     }
   }
+
+
+  // ---- Consulta por número do candidato ----
+  var numConsulta = '';
+  function consultarCand(){
+    var box=$('resCand'); if(!numConsulta){ box.textContent=''; return; }
+    var meu=numConsulta;
+    if(!box.firstChild) box.appendChild(el('div','vazio','Consultando…'));
+    fetch('/api/candidato?n='+encodeURIComponent(meu)+(fontePedida?'&fonte='+encodeURIComponent(fontePedida):''),{cache:'no-store'})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+    .then(function(x){
+      if(meu!==numConsulta) return;
+      box.textContent='';
+      if(!x.ok){ box.appendChild(el('div','vazio',x.j.erro||'Consulta indisponível no TSE neste momento. Tente de novo em instantes.')); return; }
+      if(!x.j.achados.length){ box.appendChild(el('div','vazio','Nenhum candidato com o número '+meu+' no Espírito Santo ou para presidente.')); return; }
+      var g=el('div','achados');
+      x.j.achados.forEach(function(c){
+        var k=el('div','achado');
+        k.appendChild(el('div','l',c.cargo+' · '+c.abrangencia));
+        var nm=el('div','nm',c.nome+' '); nm.appendChild(el('span',null,c.n+' · '+c.partido+(c.legenda&&c.legenda!==c.partido?' · '+c.legenda:''))); k.appendChild(nm);
+        k.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
+        var d=[c.pct+'% dos votos', c.posicao+'º de '+c.concorrentes, c.pctSecoes+'% das seções apuradas'];
+        if(c.st) d.push(c.st);
+        if(c.dvt && c.dvt!=='Válido') d.push(c.dvt);
+        k.appendChild(el('div','d',d.join(' · ')));
+        g.appendChild(k);
+      });
+      box.appendChild(g);
+      if(x.j.falhas) box.appendChild(el('div','sub','Parte dos cargos não respondeu no TSE; o resultado pode estar incompleto.'));
+    }).catch(function(){ if(meu===numConsulta){ box.textContent=''; box.appendChild(el('div','vazio','Sem conexão para consultar agora.')); } });
+  }
+  $('formCand').addEventListener('submit',function(e){ e.preventDefault(); numConsulta=$('numCand').value.replace(/\D/g,''); $('resCand').textContent=''; if(numConsulta.length<2){ numConsulta=''; $('resCand').appendChild(el('div','vazio','Digite o número com pelo menos 2 dígitos.')); return; } consultarCand(); });
 
   function buscar(){
     clearInterval(timer);
