@@ -199,24 +199,13 @@ export function enxugar(j, limite) {
 // Decide a fonte: usa o ambiente oficial assim que o TSE publicar os arquivos;
 // até lá, cai no simulado. A sondagem é lembrada por 5 min para não gerar 404 em série
 // (o TSE bloqueia IPs que acumulam 404).
-async function resolverFonte(pedido, env, cache) {
-  if (pedido === 'oficial' || pedido === 'simulado') return pedido;
-  const modo = (env && env.TSE_MODO) || 'auto';
-  if (modo === 'oficial' || modo === 'simulado') return modo;
-
-  const chave = new Request('https://painel.interno/sonda-oficial');
-  const lembrado = cache && (await cache.match(chave));
-  if (lembrado) return (await lembrado.text()) === 'ok' ? 'oficial' : 'simulado';
-
-  const r = await baixar(urlArquivo('oficial', 'federal', 'br', '0001'));
-  const ok = !!r.dados;
-  if (cache) {
-    await cache.put(
-      chave,
-      new Response(ok ? 'ok' : 'nao', { headers: { 'cache-control': `max-age=${TTL_SONDA}` } }),
-    );
-  }
-  return ok ? 'oficial' : 'simulado';
+// Fonte dos dados: SEMPRE o ambiente oficial do TSE. O simulado (candidatos fictícios) só aparece
+// quando pedido explicitamente com ?fonte=simulado. Não há mais troca automática para o simulado:
+// se o TSE falhar, o painel mostra indisponibilidade, nunca dados de teste.
+async function resolverFonte(pedido, env) {
+  if (pedido === 'simulado') return 'simulado';
+  if (env && env.TSE_MODO === 'simulado' && pedido !== 'oficial') return 'simulado';
+  return 'oficial';
 }
 
 export async function montarPainel(fonte, mun) {
