@@ -188,6 +188,10 @@ table.banc tr.zero td{color:var(--mute)}
 .mapa li.c::before{display:none}.mapa li.c{padding-left:0}
 .chips button{font-weight:700}
 @media (max-width:1000px){.card.mapa{grid-template-columns:1fr}.mapa .palco{order:-1}.mapa svg{max-width:440px}}
+table.vagas td.vg{font-weight:700;font-size:17px;width:46px}
+table.vagas .sel{margin-left:0;white-space:nowrap}
+table.vagas tr.corte td{border-top:2px solid var(--gold)}
+.card .prox{margin-top:10px}
 </style>
 </head>
 <body>
@@ -408,25 +412,32 @@ table.banc tr.zero td{color:var(--mute)}
     });
     tb.appendChild(corpo); card.appendChild(tb);
 
-    card.appendChild(el('h4',null,(fim?'Eleitos':'Estariam eleitos agora')+' · '+pr.preenchidas+' de '+pr.vagas));
+    card.appendChild(el('h4',null,(fim?'Vagas na ordem de distribuição':'Vagas na ordem de distribuição, agora')+' · '+pr.preenchidas+' de '+pr.vagas));
     var limite = abertos[id] ? pr.eleitos.length : Math.min(pr.eleitos.length,10);
-    var t2 = el('table'); var c2 = el('tbody');
-    pr.eleitos.slice(0,limite).forEach(function(c,i){
-      var tr = el('tr');
-      tr.appendChild(el('td','k',String(i+1)));
+    var t2 = el('table','banc vagas'); var h2 = el('thead'); var hr = el('tr');
+    ['Vaga','Candidato','Entrada','Votos','Média'].forEach(function(t,i){ hr.appendChild(el('th',i>2?'r':null,t)); });
+    h2.appendChild(hr); t2.appendChild(h2);
+    var c2 = el('tbody');
+    pr.eleitos.slice(0,limite).forEach(function(c){
+      var tr = el('tr', c.sobra===1?'corte':'');
+      tr.appendChild(el('td','vg',c.vaga+'ª'));
       var td = el('td',null,c.nome+' ');
-      td.appendChild(el('span',null,c.partido));
-      td.appendChild(el('span','sel'+(c.via==='QP'?'':' med'),c.via==='QP'?'QP':'Média'));
+      td.appendChild(el('span',null,c.partido+(c.legenda!==c.partido?' · '+c.legenda:'')));
       tr.appendChild(td);
+      var te = el('td'); te.appendChild(el('span','sel'+(c.via==='QP'?'':' med'),c.via==='QP'?'QP':c.sobra+'ª sobra')); tr.appendChild(te);
       tr.appendChild(el('td','r',nf.format(c.votos)));
+      tr.appendChild(el('td','r',c.via==='QP'?'—':nf.format(c.media)));
       c2.appendChild(tr);
     });
     t2.appendChild(c2); card.appendChild(t2);
     if(pr.eleitos.length>10){
-      var bt = el('button','mais',abertos[id]?'Mostrar menos':'Ver os '+pr.eleitos.length+' nomes');
+      var bt = el('button','mais',abertos[id]?'Mostrar menos':'Ver as '+pr.eleitos.length+' vagas');
       bt.type='button';
       bt.onclick=function(){abertos[id]=!abertos[id]; if(ultimo) desenhar(ultimo)};
       card.appendChild(bt);
+    }
+    if(pr.proximaMedia){
+      card.appendChild(el('div','sub prox','Próxima média na fila: '+pr.proximaMedia.legenda+', '+nf.format(pr.proximaMedia.media)+' ('+pr.proximaMedia.nome+') · é quem levaria a vaga seguinte.'));
     }
     if(pr.naFila.length && !fim){
       var r = el('div','rod');
