@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { onRequestGet } from './functions/api/painel.js';
 import { onRequestGet as mapaGet } from './functions/api/mapa.js';
 import { onRequestGet as candGet } from './functions/api/candidato.js';
+import { onRequestGet as fotoGet } from './functions/api/foto.js';
 
 const PORTA = process.env.PORT || 8788;
 
@@ -17,6 +18,7 @@ http
       return;
     }
     if (url.pathname === '/api/candidato') { const r = await candGet({ request: new Request(url), env: process.env }); res.writeHead(r.status, Object.fromEntries(r.headers)); res.end(await r.text()); return; }
+    if (url.pathname === '/api/foto') { const r = await fotoGet({ request: new Request(url) }); res.writeHead(r.status, Object.fromEntries(r.headers)); res.end(Buffer.from(await r.arrayBuffer())); return; }
     if (url.pathname === '/api/mapa') { const r = await mapaGet({ request: new Request(url), env: process.env }); res.writeHead(r.status, Object.fromEntries(r.headers)); res.end(await r.text()); return; }
     try {
       if (url.pathname === '/es-mapa.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(await readFile(new URL('./public/es-mapa.json', import.meta.url))); return; }

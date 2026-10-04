@@ -12,7 +12,7 @@ function resumir(j) {
   for (const agr of (j.carg && j.carg[0] && j.carg[0].agr) || []) {
     for (const par of agr.par || []) {
       for (const c of par.cand || []) {
-        cands.push({ n: c.n, nome: c.nmu || c.nm, partido: par.sg, votos: Number(c.vap || 0), pct: c.pvap || '0,00', seq: Number(c.seq || 0) });
+        cands.push({ n: c.n, sq: c.sqcand || '', nome: c.nmu || c.nm, partido: par.sg, votos: Number(c.vap || 0), pct: c.pvap || '0,00', seq: Number(c.seq || 0) });
       }
     }
   }

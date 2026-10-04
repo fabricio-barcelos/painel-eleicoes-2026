@@ -143,6 +143,7 @@ export function enxugar(j, limite) {
         const vice = (c.vs || []).map((v) => v.nmu).filter(Boolean);
         cands.push({
           n: c.n,
+          sq: c.sqcand || '',
           nome: c.nmu || c.nm,
           partido: par.sg,
           colig: agr.tp === 'i' ? '' : agr.nm,
