@@ -1,12 +1,9 @@
 // GET /api/candidato?n=1234[&fonte=simulado]
-// Procura o número em todos os cargos em disputa no ES e devolve os votos de cada candidato encontrado.
+// Procura o número entre os candidatos a senador, deputado federal e deputado estadual do ES e devolve os votos de cada candidato encontrado.
 import { urlArquivo, baixar } from './painel.js';
 
 const TTL = 30;
 const BUSCAS = [
-  ['Presidente', 'Brasil', 'federal', 'br', '0001'],
-  ['Presidente', 'Espírito Santo', 'federal', 'es', '0001'],
-  ['Governador', 'Espírito Santo', 'estadual', 'es', '0003'],
   ['Senador', 'Espírito Santo', 'estadual', 'es', '0005'],
   ['Deputado Federal', 'Espírito Santo', 'estadual', 'es', '0006'],
   ['Deputado Estadual', 'Espírito Santo', 'estadual', 'es', '0007'],
@@ -44,8 +41,8 @@ export async function consultar(fonte, numero) {
 export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const numero = (url.searchParams.get('n') || '').replace(/\D/g, '').slice(0, 5);
-  if (numero.length < 2) {
-    return new Response(JSON.stringify({ erro: 'Informe o número do candidato (de 2 a 5 dígitos).' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
+  if (numero.length < 3) {
+    return new Response(JSON.stringify({ erro: 'Informe o número do candidato (de 3 a 5 dígitos).' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
   }
   const fonte = url.searchParams.get('fonte') === 'simulado' || (env && env.TSE_MODO === 'simulado') ? 'simulado' : 'oficial';
   const cache = typeof caches !== 'undefined' ? caches.default : null;
