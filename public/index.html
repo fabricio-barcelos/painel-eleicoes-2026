@@ -169,6 +169,25 @@ table.banc tr.zero td{color:var(--mute)}
 .resumo .par .kpi+.kpi{border-left:1px solid #AA8800}
 @media (prefers-color-scheme:dark){.resumo .par{background:#111;outline:1px solid #AA8800}}
 @media (max-width:420px){.resumo .par{grid-template-columns:1fr}.resumo .par .kpi+.kpi{border-left:0;border-top:1px solid #AA8800}}
+.card.mapa{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr) minmax(240px,340px);gap:24px;align-items:start;padding:24px}
+.mapa .palco{display:flex;justify-content:center}
+.mapa svg{width:100%;max-width:560px;height:auto;max-height:88vh;display:block}
+.mapa path{fill:var(--track);stroke:var(--card);stroke-width:1.6;cursor:pointer;transition:fill .4s,fill-opacity .4s;outline:none}
+.mapa path:hover,.mapa path:focus-visible{stroke:var(--ink);stroke-width:3}
+.mapa path.sel{stroke:var(--ink);stroke-width:4.5}
+.mapa .leg{list-style:none;margin:14px 0 0;padding:0}
+.mapa .leg li{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-weight:700;font-size:15px}
+.mapa .leg li:first-child{border-top:0}
+.mapa .leg .cx{width:18px;height:18px;border-radius:4px}
+.mapa .leg small{font-weight:400;color:var(--mute);font-size:12px}
+.mapa .leg b{font-size:18px}
+.mapa .nota{margin-top:12px;font-size:13px;color:var(--mute)}
+.mapa .escala{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-size:12.5px;color:var(--mute)}
+.mapa .escala span{display:flex;align-items:center;gap:8px}
+.mapa .escala i{width:26px;height:12px;border-radius:3px;background:var(--ink);display:inline-block}
+.mapa li.c::before{display:none}.mapa li.c{padding-left:0}
+.chips button{font-weight:700}
+@media (max-width:1000px){.card.mapa{grid-template-columns:1fr}.mapa .palco{order:-1}.mapa svg{max-width:440px}}
 </style>
 </head>
 <body>
@@ -204,12 +223,12 @@ table.banc tr.zero td{color:var(--mute)}
   </div>
 
   <h2>Resultado por município</h2>
-  <div class="chips" id="chips" role="group" aria-label="Município"></div>
-  <div class="grid">
-    <section class="card" id="munPresidente"></section>
-    <section class="card" id="munGovernador"></section>
-    <section class="card" id="munSenador"></section>
-  </div>
+  <div class="chips" id="chips" role="group" aria-label="Votação exibida no mapa"></div>
+  <section class="card mapa">
+    <div class="lado" id="mapaLegenda"></div>
+    <div class="palco" id="mapaPalco"><div class="vazio">Carregando o mapa…</div></div>
+    <div class="lado" id="mapaDetalhe"></div>
+  </section>
 
   <footer>
     <div class="fonte">
@@ -238,13 +257,10 @@ table.banc tr.zero td{color:var(--mute)}
     presidenteES:['Votos do Espírito Santo','Presidente · só o eleitorado capixaba'],
     governador:['Governador','Espírito Santo'],
     senador:['Senador','Espírito Santo · 2 vagas'],
-    munPresidente:['Presidente',''],
-    munGovernador:['Governador',''],
-    munSenador:['Senador',''],
     depFederal:['Deputado Federal','10 vagas'],
     depEstadual:['Deputado Estadual','30 vagas']
   };
-  var MAJ = ['presidenteBR','presidenteES','governador','senador','munPresidente','munGovernador','munSenador'];
+  var MAJ = ['presidenteBR','presidenteES','governador','senador'];
   var nf = new Intl.NumberFormat('pt-BR');
 
   function localStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -425,16 +441,99 @@ table.banc tr.zero td{color:var(--mute)}
     card.appendChild(el('div','vazio','Dados indisponíveis no TSE neste momento'+(erro?' (erro '+erro+')':'')+'. Nova tentativa na próxima atualização.'));
   }
 
-  function chips(d){
+  // ---- Mapa do ES por município ----
+  var CORES = ['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b','#e377c2','#17becf','#bcbd22','#393b79','#637939','#ad494a','#7f7f7f'];
+  var cargoMapa = localStorageGet('cargoMapa')==='presidente' ? 'presidente' : 'governador';
+  var geo = null, dadosMapa = null, munSel = mun, pedidoMapa = 0;
+
+  function chips(){
     var box = $('chips'); box.textContent='';
-    var lab = el('label',null,'Município'); lab.setAttribute('for','selMun');
-    var sel = el('select'); sel.id='selMun';
-    Object.keys(d.municipios).sort(function(x,y){return d.municipios[x].localeCompare(d.municipios[y],'pt-BR')}).forEach(function(cd){
-      var o = el('option',null,d.municipios[cd]); o.value=cd; if(cd===d.municipio.cd) o.selected=true; sel.appendChild(o);
+    [['governador','Governador'],['presidente','Presidente']].forEach(function(x){
+      var b = el('button',null,x[1]); b.type='button';
+      b.setAttribute('aria-pressed', String(cargoMapa===x[0]));
+      b.onclick=function(){ if(cargoMapa===x[0]) return; cargoMapa=x[0]; localStorageSet('cargoMapa',cargoMapa); dadosMapa=null; chips(); pintar(); buscarMapa(); };
+      box.appendChild(b);
     });
-    sel.onchange=function(){mun=sel.value; localStorageSet('mun',mun); buscar()};
-    box.appendChild(lab); box.appendChild(sel);
-    box.appendChild(el('span','qt',Object.keys(d.municipios).length+' municípios do ES'));
+    box.appendChild(el('span','qt','Cada município recebe a cor de quem lidera nele · toque num município para ver os números'));
+  }
+  function corDe(){
+    var b = ultimo && ultimo.blocos[cargoMapa==='presidente'?'presidenteES':'governador'];
+    var m = {}; if(!b) return m;
+    b.cands.map(function(c){return c}).sort(function(x,y){return Number(x.n)-Number(y.n)}).forEach(function(c,i){ m[c.n]={cor:CORES[i%CORES.length],nome:c.nome,partido:c.partido}; });
+    return m;
+  }
+  function montarSvg(){
+    var NS='http://www.w3.org/2000/svg';
+    var svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','-6 -6 '+(geo.w+12)+' '+(geo.h+12)); svg.setAttribute('role','img'); svg.setAttribute('aria-label','Mapa do Espírito Santo por município'); svg.id='svgMapa';
+    Object.keys(geo.m).forEach(function(cd){
+      var p=document.createElementNS(NS,'path'); p.setAttribute('d',geo.m[cd]); p.setAttribute('data-cd',cd); p.setAttribute('tabindex','0');
+      p.addEventListener('click',function(){ munSel=cd; localStorageSet('mun',cd); pintar(); });
+      p.addEventListener('mouseenter',function(){ detalhe(cd); });
+      p.addEventListener('mouseleave',function(){ detalhe(munSel); });
+      p.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); munSel=cd; pintar(); } });
+      svg.appendChild(p);
+    });
+    var palco=$('mapaPalco'); palco.textContent=''; palco.appendChild(svg);
+  }
+  function pintar(){
+    if(!geo) return;
+    if(!$('svgMapa')) montarSvg();
+    var cores = corDe(), conta = {}, comVoto = 0;
+    Array.prototype.forEach.call($('svgMapa').querySelectorAll('path'),function(p){
+      var cd=p.getAttribute('data-cd'), m=dadosMapa && dadosMapa[cd], l=m && m.votos>0 && m.top[0];
+      p.setAttribute('class', cd===munSel?'sel':'');
+      if(l && cores[l.n]){
+        var pc=num(l.pct); comVoto++; conta[l.n]=(conta[l.n]||0)+1;
+        p.style.fill=cores[l.n].cor; p.style.fillOpacity = pc>=50?1:pc>=35?.72:.46;
+      } else { p.style.fill=''; p.style.fillOpacity=''; }
+      var t=p.querySelector('title'); if(!t){ t=document.createElementNS('http://www.w3.org/2000/svg','title'); p.appendChild(t); }
+      t.textContent=(m?m.nome:'')+(l?' — '+l.nome+' '+l.pct+'%':'');
+    });
+    if(munSel && $('svgMapa').querySelector('path.sel')) $('svgMapa').appendChild($('svgMapa').querySelector('path.sel'));
+    var lg=$('mapaLegenda'); lg.textContent='';
+    lg.appendChild(el('h3',null,cargoMapa==='presidente'?'Presidente':'Governador'));
+    lg.appendChild(el('div','sub','Quem lidera em cada município'));
+    var ordem=Object.keys(cores).sort(function(x,y){return (conta[y]||0)-(conta[x]||0)||Number(x)-Number(y)});
+    var ul=el('ul','leg');
+    ordem.forEach(function(n){
+      if(!conta[n] && comVoto) return;
+      var li=el('li'); var s=el('span','cx'); s.style.background=cores[n].cor; li.appendChild(s);
+      var tx=el('span','nm',cores[n].nome+' '); tx.appendChild(el('small',null,cores[n].partido)); li.appendChild(tx);
+      li.appendChild(el('b',null,comVoto?String(conta[n]||0):'—')); ul.appendChild(li);
+    });
+    lg.appendChild(ul);
+    lg.appendChild(el('div','nota',comVoto? comVoto+' de 78 municípios com votos apurados. O número ao lado de cada nome é a quantidade de municípios em que lidera.' : 'Sem votos apurados ainda: o mapa ganha cor conforme os municípios entram na apuração.'));
+    var esc=el('div','escala'); [['.46','lidera com menos de 35%'],['.72','de 35% a 50%'],['1','mais de 50%']].forEach(function(x){ var i=el('span'); var q=el('i'); q.style.opacity=x[0]; i.appendChild(q); i.appendChild(document.createTextNode(x[1])); esc.appendChild(i); });
+    lg.appendChild(esc);
+    detalhe(munSel);
+  }
+  function detalhe(cd){
+    var box=$('mapaDetalhe'); box.textContent='';
+    var m=dadosMapa && dadosMapa[cd], nome=(m&&m.nome)||(ultimo&&ultimo.municipios[cd])||'';
+    box.appendChild(el('h3',null,nome||'Município'));
+    if(!m){ box.appendChild(el('div','sub',dadosMapa?'Dados indisponíveis no TSE para este município.':'Carregando…')); return; }
+    box.appendChild(el('div','sub',m.pctSecoes+'% das seções · '+nf.format(m.votos)+' votos válidos'));
+    var cores=corDe(), ol=el('ol');
+    m.top.forEach(function(c,i){
+      var li=el('li','c'+(m.votos>0&&i===0?' lider':''));
+      var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm);
+      li.appendChild(el('div','pct',c.pct+'%'));
+      li.appendChild(el('div','meta','')); li.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
+      var tr=el('div','track'); var f=el('div','fill'); f.style.width=Math.min(100,num(c.pct))+'%'; if(cores[c.n]) f.style.background=cores[c.n].cor; tr.appendChild(f); li.appendChild(tr);
+      ol.appendChild(li);
+    });
+    box.appendChild(ol);
+  }
+  function buscarMapa(){
+    var meu=++pedidoMapa, cargo=cargoMapa, f=fontePedida?'&fonte='+encodeURIComponent(fontePedida):'';
+    var pg = geo ? Promise.resolve(geo) : fetch('/es-mapa.json').then(function(r){return r.json()}).then(function(g){geo=g; return g});
+    Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa?cargo='+cargo+'&parte='+p+f,{cache:'no-store'}).then(function(r){ return r.ok?r.json():{municipios:{}} }).catch(function(){return {municipios:{}}}); })))
+    .then(function(r){
+      if(meu!==pedidoMapa) return;
+      var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.municipios).forEach(function(k){ j[k]=x.municipios[k]; }); });
+      if(Object.keys(j).length || !dadosMapa) dadosMapa=j;
+      pintar();
+    }).catch(function(e){ console.error(e); });
   }
 
   function kpi(box,l,v,d,pct,num){
@@ -457,11 +556,11 @@ table.banc tr.zero td{color:var(--mute)}
   function desenhar(d){
     ultimo = d;
     resumo(d);
-    chips(d);
+    chips(); pintar(); buscarMapa();
     MAJ.forEach(function(id){
       var b = d.blocos[id];
       if(!b) return falta(id,d.erros[id]);
-      majoritario(id,b, id.indexOf('mun')===0 ? d.municipio.nome+(id==='munSenador'?' · 2 vagas':'') : null);
+      majoritario(id,b,null);
     });
     ['depFederal','depEstadual'].forEach(function(id){
       var b = d.blocos[id];
@@ -493,7 +592,7 @@ table.banc tr.zero td{color:var(--mute)}
   function buscar(){
     clearInterval(timer);
     $('prox').textContent = 'Atualizando…';
-    var q = '/api/painel?mun='+encodeURIComponent(mun)+(fontePedida?'&fonte='+encodeURIComponent(fontePedida):'');
+    var q = '/api/painel'+(fontePedida?'?fonte='+encodeURIComponent(fontePedida):'');
     fetch(q,{cache:'no-store'}).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();

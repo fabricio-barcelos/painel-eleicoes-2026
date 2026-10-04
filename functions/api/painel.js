@@ -107,13 +107,13 @@ const TOP_PROPORCIONAL = 40;
 
 const pad6 = (n) => String(n).padStart(6, '0');
 
-function urlArquivo(fonte, tipo, abr, cargo) {
+export function urlArquivo(fonte, tipo, abr, cargo) {
   const f = FONTES[fonte];
   const ele = tipo === 'federal' ? f.federal : f.estadual;
   return `${f.base}/${ele}/dados/${abr.slice(0, 2)}/${abr}-c${cargo}-e${pad6(ele)}-u.json`;
 }
 
-async function baixar(url) {
+export async function baixar(url) {
   try {
     const r = await fetch(url, {
       headers: { accept: 'application/json', 'user-agent': 'painel-eleicoes-es/1.0' },
@@ -217,9 +217,6 @@ export async function montarPainel(fonte, mun) {
     senador: ['estadual', UF, '0005'],
     depFederal: ['estadual', UF, '0006', TOP_PROPORCIONAL],
     depEstadual: ['estadual', UF, '0007', TOP_PROPORCIONAL],
-    munPresidente: ['federal', m, '0001'],
-    munGovernador: ['estadual', m, '0003'],
-    munSenador: ['estadual', m, '0005'],
   };
   const chaves = Object.keys(pedidos);
   const respostas = await Promise.all(
