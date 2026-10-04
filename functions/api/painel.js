@@ -230,7 +230,7 @@ export async function montarPainel(fonte, mun) {
       blocos[k] = enxugar(r.dados, pedidos[k][3]);
       if (pedidos[k][3]) {
         const pr = projetarProporcional(r.dados);
-        if (pr) { delete pr._confere; delete pr._eleitosN; blocos[k].projecao = pr; }
+        if (pr) { delete pr._confere; delete pr._eleitosN; delete pr._det; blocos[k].projecao = pr; }
       }
     }
     else erros[k] = r.erro;
