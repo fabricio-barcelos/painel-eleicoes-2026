@@ -629,8 +629,10 @@ table.vagas tr.corte td{border-top:2px solid var(--gold)}
     if(sim){
       av.textContent = 'Dados de teste do simulado do TSE, com candidatos fictícios. Não são resultados reais.';
       av.hidden = false;
-    } else if(p && p.andamento==='n'){
-      av.textContent = 'A apuração ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 4 de outubro, e esta página passa a se atualizar sozinha.';
+    } else if(Object.keys(d.blocos).every(function(k){ return d.blocos[k].andamento==='n'; })){
+      av.textContent = Date.now() >= Date.UTC(2026,9,4,20,0,0)
+        ? 'As urnas fecharam às 17h. Aguardando o TSE divulgar os primeiros votos; esta página se atualiza sozinha e este aviso some assim que os dados chegarem.'
+        : 'A apuração ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 4 de outubro, e esta página passa a se atualizar sozinha.';
       av.hidden = false;
     } else if(p && !p.podeDivulgar){
       av.textContent = 'A votação para presidente só pode ser divulgada após o fechamento das urnas em todo o país.';
