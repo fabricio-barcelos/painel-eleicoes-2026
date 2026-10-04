@@ -443,6 +443,12 @@ table.banc tr.zero td{color:var(--mute)}
 
   // ---- Mapa do ES por município ----
   var CORES = ['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b','#e377c2','#17becf','#bcbd22','#393b79','#637939','#ad494a','#7f7f7f'];
+  // Cor de cada candidato no mapa: a cor do partido. Para trocar, edite esta tabela.
+  var COR_PARTIDO = {
+    'PT':'#D7191C', 'MDB':'#1E9E4A', 'REPUBLICANOS':'#1565C0', 'MISSÃO':'#F2C200', 'UP':'#7B1E3A',
+    'PL':'#1B3A8C', 'PSD':'#00A3C4', 'NOVO':'#F28C00', 'AVANTE':'#2BB5A0', 'DEMOCRATA':'#7E57C2',
+    'PSTU':'#C2185B', 'PCB':'#8B0000', 'PCO':'#4A1515', 'DC':'#6FA8DC'
+  };
   var cargoMapa = localStorageGet('cargoMapa')==='presidente' ? 'presidente' : 'governador';
   var geo = null, dadosMapa = null, munSel = mun, pedidoMapa = 0;
 
@@ -459,7 +465,7 @@ table.banc tr.zero td{color:var(--mute)}
   function corDe(){
     var b = ultimo && ultimo.blocos[cargoMapa==='presidente'?'presidenteES':'governador'];
     var m = {}; if(!b) return m;
-    b.cands.map(function(c){return c}).sort(function(x,y){return Number(x.n)-Number(y.n)}).forEach(function(c,i){ m[c.n]={cor:CORES[i%CORES.length],nome:c.nome,partido:c.partido}; });
+    b.cands.map(function(c){return c}).sort(function(x,y){return Number(x.n)-Number(y.n)}).forEach(function(c,i){ m[c.n]={cor:COR_PARTIDO[String(c.partido).replace(/\*/g,'').trim().toUpperCase()]||CORES[i%CORES.length],nome:c.nome,partido:c.partido}; });
     return m;
   }
   function montarSvg(){
