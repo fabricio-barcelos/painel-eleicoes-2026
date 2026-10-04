@@ -446,7 +446,7 @@ li.c.lider img.ft{border-color:var(--gold)}
     var hd = el('thead'); hd.appendChild(th); tb.appendChild(hd);
     var corpo = el('tbody');
     pr.bancadas.forEach(function(l){
-      var tr = el('tr'+(l.total?'':' zero'));
+      var tr = el('tr', l.total?'':'zero');
       var td = el('td',null,l.nome+' ');
       if(l.composicao) td.appendChild(el('span',null,l.composicao));
       tr.appendChild(td);
