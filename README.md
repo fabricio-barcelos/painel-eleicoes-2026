@@ -23,3 +23,8 @@ Painel web que acompanha a apuração em tempo real com os arquivos oficiais de 
 
 Trocar os códigos `federal` e `estadual` em `FONTES.oficial` pelos do 2º turno, publicados pelo TSE em
 https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados
+
+## 2º turno (25/10/2026)
+
+O painel abre no 2º turno (Presidente: eleição 6258; Governador do ES: 6260). `?turno=1`, ou o botão no topo, mostra o resultado final de 04/10.
+As comparações com o 1º turno usam `public/t1.json`, gerado uma única vez por `node tools/gerar-t1.mjs` a partir dos arquivos oficiais com totalização final.

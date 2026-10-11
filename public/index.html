@@ -218,10 +218,23 @@ li.c.lider img.ft{border-color:var(--gold)}
 .achado img.ft{float:right;margin-left:12px;border-color:var(--gold)}
 .kpi.comft{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}
 .kpi.comft img.ft{grid-row:1/4;border-color:#AA8800}
+body.t2 .t1{display:none}
+.turnos{margin:18px 0 0}
+.duelo{margin-top:14px;padding:12px 14px;border-radius:10px;background:#000;color:#fff;font-size:14px;line-height:1.45}
+.duelo b{color:#AA8800}
+.duelo .imp{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:99px;background:#AA8800;color:#000;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+table.cmp{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
+table.cmp th{font:700 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+table.cmp td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.cmp td small{display:block;color:var(--mute);font-size:11.5px}
+table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-weight:700}
+.mapa .virou{margin-top:10px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--warn-bg);font-size:13px}
+.mapa .cmpm{margin-top:10px;font-size:12.5px;color:var(--mute)}
 </style>
 </head>
 <body>
-<div class="faixa"><div class="in"><a class="logo" href="https://www.instagram.com/barcelos.estrategia" rel="noopener" target="_blank"><img src="/logo.png" alt="Barcelos Estratégia de Negócios — Inteligência Estratégica e Gestão de Contratos" height="64"></a><span class="lema">Eleições 2026 · 1º turno · 4 de outubro</span></div></div>
+<div class="faixa"><div class="in"><a class="logo" href="https://www.instagram.com/barcelos.estrategia" rel="noopener" target="_blank"><img src="/logo.png" alt="Barcelos Estratégia de Negócios — Inteligência Estratégica e Gestão de Contratos" height="64"></a><span class="lema" id="lema">Eleições 2026 · 2º turno · 25 de outubro</span></div></div>
 <div class="wrap">
   <header>
     <h1>Apuração em tempo real<br>no <em>Brasil</em> e <em>Espírito Santo</em></h1>
@@ -231,6 +244,7 @@ li.c.lider img.ft{border-color:var(--gold)}
       <span id="prox"></span>
     </div>
   </header>
+  <div class="chips turnos" id="turnos" role="group" aria-label="Turno exibido"></div>
   <p class="aviso" id="aviso" hidden></p>
   <div class="resumo" id="resumo"></div>
 
@@ -240,14 +254,14 @@ li.c.lider img.ft{border-color:var(--gold)}
     <section class="card" id="presidenteES"></section>
   </div>
 
-  <h2>Espírito Santo</h2>
+  <h2 id="h2ES">Espírito Santo</h2>
   <div class="grid">
     <section class="card" id="governador"></section>
-    <section class="card" id="senador"></section>
+    <section class="card t1" id="senador"></section>
   </div>
 
-  <h2>Câmara e Assembleia</h2>
-  <div class="grid">
+  <h2 class="t1">Câmara e Assembleia</h2>
+  <div class="grid t1">
     <section class="card" id="depFederal"></section>
     <section class="card" id="depEstadual"></section>
   </div>
@@ -260,8 +274,8 @@ li.c.lider img.ft{border-color:var(--gold)}
     <div class="lado" id="mapaDetalhe"></div>
   </section>
 
-  <h2>Consulta por número · Senador e Deputados</h2>
-  <section class="card consulta">
+  <h2 class="t1">Consulta por número · Senador e Deputados</h2>
+  <section class="card consulta t1">
     <form id="formCand" autocomplete="off">
       <label for="numCand">Número do candidato</label>
       <input id="numCand" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="Ex.: 1234" aria-describedby="dicaCand">
@@ -274,7 +288,7 @@ li.c.lider img.ft{border-color:var(--gold)}
   <footer>
     <div class="fonte">
       Fonte: Tribunal Superior Eleitoral, arquivos oficiais de divulgação de resultados (<a href="https://resultados.tse.jus.br" rel="noopener">resultados.tse.jus.br</a>).
-      Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos. A distribuição de cadeiras de deputado é projeção da Barcelos sobre os votos já apurados (quociente eleitoral, quociente partidário e sobras por maior média) e só se torna resultado com a totalização final do TSE.
+      Atualização automática a cada 30 segundos. Percentuais calculados pelo TSE sobre os votos válidos. A distribuição de cadeiras de deputado é projeção da Barcelos sobre os votos já apurados (quociente eleitoral, quociente partidário e sobras por maior média) e só se torna resultado com a totalização final do TSE. No 2º turno, as comparações usam o resultado final do 1º turno (04/10/2026); "eleitores em seções não apuradas" é o teto de votos que ainda podem entrar, não uma previsão.
     </div>
     <div class="credito">
       <span class="por">Elaborado por</span>
@@ -291,6 +305,10 @@ li.c.lider img.ft{border-color:var(--gold)}
   var fontePedida = params.get('fonte') || '';
   var mun = params.get('mun') || localStorageGet('mun') || '57037';
   var abertos = {};
+  // Turno exibido: o painel abre no 2º turno; ?turno=1 (ou o botão) mostra o resultado final de 04/10.
+  var turno = (params.get('turno')==='1' || fontePedida==='simulado') ? 1 : 2;
+  var T1 = null; // resultado final do 1º turno, base fixa de comparação (public/t1.json)
+  function qs(pri){ return (pri?'?':'&')+'turno='+turno+(fontePedida?'&fonte='+encodeURIComponent(fontePedida):''); }
   var restante = 0, timer = null, ultimo = null;
 
   var TITULOS = {
@@ -301,7 +319,8 @@ li.c.lider img.ft{border-color:var(--gold)}
     depFederal:['Deputado Federal','10 vagas'],
     depEstadual:['Deputado Estadual','30 vagas']
   };
-  var MAJ = ['presidenteBR','presidenteES','governador','senador'];
+  var MAJ_T1 = ['presidenteBR','presidenteES','governador','senador'], MAJ_T2 = ['presidenteBR','presidenteES','governador'];
+  var MAJ = turno===2 ? MAJ_T2 : MAJ_T1;
   var nf = new Intl.NumberFormat('pt-BR');
 
   function localStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -321,7 +340,7 @@ li.c.lider img.ft{border-color:var(--gold)}
   function situacao(b,id){
     if(b.andamento==='n') return ['Aguardando','neutro'];
     var pres = id.indexOf('residente')>-1;
-    if(b.matDefinido==='e') return ['Definido: eleito',''];
+    if(b.matDefinido==='e') return [turno===2?'Matematicamente eleito':'Definido: eleito',''];
     if(b.matDefinido==='s') return ['Definido: 2º turno',''];
     if(b.totalizacaoFinal && !(pres && id!=='presidenteBR')) return ['Resultado final',''];
     if(b.andamento==='f') return ['100% apurado',''];
@@ -397,7 +416,64 @@ li.c.lider img.ft{border-color:var(--gold)}
       bt.onclick=function(){abertos[id]=!abertos[id]; if(ultimo) desenhar(ultimo)};
       card.appendChild(bt);
     }
+    if(turno===2) duelo(card,id,b);
     rodape(card,b);
+  }
+
+  function pts(x){ return (x>0?'+':x<0?'−':'')+Math.abs(x).toFixed(2).replace('.',',')+' pt'+(Math.abs(x)===1?'':'s'); }
+  function sinal(x){ return (x>0?'+':x<0?'−':'')+nf.format(Math.abs(x)); }
+  function pc(a,b){ return b? (a/b*100).toFixed(2).replace('.',',')+'%' : '—'; }
+  // 2º turno: diferença, votos que ainda podem entrar e comparação com o 1º turno.
+  function duelo(card,id,b){
+    var a=b.cands[0], c=b.cands[1]; if(!a||!c) return;
+    var tem=b.votos.total>0, t=T1 && T1[id];
+    var fim=b.totalizacaoFinal || b.andamento==='f';
+    if(tem){
+      var dif=a.votos-c.votos, rest=b.eleitorado.naoApurado, d=el('div','duelo');
+      d.appendChild(el('b',null,'Diferença: '+nf.format(dif)+' votos'));
+      d.appendChild(document.createTextNode(' ('+pts(num(a.pct)-num(c.pct)).replace(/^\+/,'')+') a favor de '+a.nome+'. '));
+      if(b.andamento==='f' || b.totalizacaoFinal || rest<=0){ d.appendChild(document.createTextNode('Todas as seções apuradas.')); }
+      else {
+        d.appendChild(document.createTextNode('Até '+nf.format(rest)+' eleitores em seções ainda não apuradas.'));
+        d.appendChild(document.createElement('br'));
+        if(dif>rest) d.appendChild(el('span','imp','Virada matematicamente impossível'));
+        else d.appendChild(document.createTextNode(c.nome+' precisaria de '+pc((dif+rest)/2,rest)+' desses votos, se todos comparecessem e votassem em um dos dois.'));
+      }
+      card.appendChild(d);
+    }
+    if(!t) return;
+    card.appendChild(el('h4',null,'Comparação com o 1º turno'));
+    var tb=el('table','cmp'), hd=el('thead'), hr=el('tr');
+    ['','1º turno','2º turno','Variação'].forEach(function(x){ hr.appendChild(el('th',null,x)); }); hd.appendChild(hr); tb.appendChild(hd);
+    var co=el('tbody');
+    function linha(rot,v1,s1,v2,s2,dv,ds,bom){
+      var tr=el('tr'); tr.appendChild(el('td',null,rot));
+      var x=el('td',null,v1); if(s1) x.appendChild(el('small',null,s1)); tr.appendChild(x);
+      x=el('td',null,v2); if(s2) x.appendChild(el('small',null,s2)); tr.appendChild(x);
+      x=el('td',bom==null?null:(bom?'up':'dn'),dv); if(ds) x.appendChild(el('small',null,ds)); tr.appendChild(x);
+      co.appendChild(tr);
+    }
+    [a,c].forEach(function(k){
+      var k1=t.c[k.n]; if(!k1) return;
+      if(tem){
+        var dv=k.votos-k1.v, dp=num(k.pct)-num(k1.pct);
+        // Com apuração parcial, comparar votos absolutos com o total do 1º turno engana: mostra só os pontos.
+        if(fim) linha(k.nome,nf.format(k1.v),k1.pct+'%',nf.format(k.votos),k.pct+'%',sinal(dv)+' votos',pts(dp),dv>=0);
+        else linha(k.nome,nf.format(k1.v),k1.pct+'%',nf.format(k.votos),k.pct+'% (parcial)',pts(dp),'',dp>=0);
+      }
+      else linha(k.nome,nf.format(k1.v),k1.pct+'%','—','','—','',null);
+    });
+    var bn1=t.vb+t.vn;
+    if(tem){
+      var bn2=b.votos.brancos+b.votos.nulos;
+      linha('Abstenção',t.pa+'%',nf.format(t.abst),b.eleitorado.pctAbstencao+'%',nf.format(b.eleitorado.abstencao),pts(num(b.eleitorado.pctAbstencao)-num(t.pa)),'',null);
+      linha('Brancos e nulos',pc(bn1,t.tv),nf.format(bn1),pc(bn2,b.votos.total),nf.format(bn2),pts(bn2/b.votos.total*100-bn1/t.tv*100),'',null);
+    } else {
+      linha('Abstenção',t.pa+'%',nf.format(t.abst),'—','','—','',null);
+      linha('Brancos e nulos',pc(bn1,t.tv),nf.format(bn1),'—','','—','',null);
+    }
+    tb.appendChild(co); card.appendChild(tb);
+    if(tem && !b.totalizacaoFinal && b.andamento!=='f') card.appendChild(el('div','sub prox','Votos e abstenção do 2º turno são parciais: consideram só as seções já apuradas.'));
   }
 
   function proporcional(id,b){
@@ -507,9 +583,10 @@ li.c.lider img.ft{border-color:var(--gold)}
     'PSTU':'#C2185B', 'PCB':'#8B0000', 'PCO':'#4A1515', 'DC':'#6FA8DC'
   };
   // Cores definidas por candidato (cargo:número), que prevalecem sobre a do partido.
-  var COR_CANDIDATO = { 'governador:10':'#F2C200', 'governador:15':'#1565C0', 'governador:14':'#1E9E4A', 'presidente:22':'#1E9E4A', 'presidente:55':'#1565C0' };
+  var COR_CANDIDATO = { 'governador:10':'#F2C200', 'governador:15':'#1565C0', 'governador:14':'#1E9E4A', 'presidente:22':'#1E9E4A', 'presidente:55':'#1565C0', 'presidente:13':'#C62828' };
   var cargoMapa = localStorageGet('cargoMapa')==='presidente' ? 'presidente' : 'governador';
-  var geo = null, dadosMapa = null, munSel = mun, pedidoMapa = 0;
+  var geo = null, dadosMapa = null, munSel = mun, pedidoMapa = 0, soViradas = false;
+  function t1mun(cd){ return turno===2 && T1 && T1.mun[cargoMapa] && T1.mun[cargoMapa][cd]; }
 
   function chips(){
     var box = $('chips'); box.textContent='';
@@ -519,7 +596,12 @@ li.c.lider img.ft{border-color:var(--gold)}
       b.onclick=function(){ if(cargoMapa===x[0]) return; cargoMapa=x[0]; localStorageSet('cargoMapa',cargoMapa); dadosMapa=null; chips(); pintar(); buscarMapa(); };
       box.appendChild(b);
     });
-    box.appendChild(el('span','qt','Cada município recebe a cor de quem lidera nele · toque num município para ver os números'));
+    if(turno===2){
+      var v = el('button',null,'Só as viradas'); v.type='button'; v.setAttribute('aria-pressed', String(soViradas));
+      v.onclick=function(){ soViradas=!soViradas; chips(); pintar(); };
+      box.appendChild(v);
+    }
+    box.appendChild(el('span','qt', turno===2 ? 'Cada município recebe a cor de quem lidera nele · "Só as viradas" destaca onde o vencedor mudou em relação ao 1º turno' : 'Cada município recebe a cor de quem lidera nele · toque num município para ver os números'));
   }
   function corDe(){
     var b = ultimo && ultimo.blocos[cargoMapa==='presidente'?'presidenteES':'governador'];
@@ -543,13 +625,14 @@ li.c.lider img.ft{border-color:var(--gold)}
   function pintar(){
     if(!geo) return;
     if(!$('svgMapa')) montarSvg();
-    var cores = corDe(), conta = {}, comVoto = 0;
+    var cores = corDe(), conta = {}, comVoto = 0, viradas = {}, nVir = 0;
     Array.prototype.forEach.call($('svgMapa').querySelectorAll('path'),function(p){
       var cd=p.getAttribute('data-cd'), m=dadosMapa && dadosMapa[cd], l=m && m.votos>0 && m.top[0];
       p.setAttribute('class', cd===munSel?'sel':'');
       if(l && cores[l.n]){
         var pc=num(l.pct); comVoto++; conta[l.n]=(conta[l.n]||0)+1;
-        p.style.fill=cores[l.n].cor; p.style.fillOpacity = pc>=50?1:pc>=35?.72:.46;
+        var a1=t1mun(cd), virou=!!(a1 && a1.lider!==l.n); if(virou){ viradas[l.n]=(viradas[l.n]||0)+1; nVir++; }
+        p.style.fill=cores[l.n].cor; p.style.fillOpacity = (turno===2 && soViradas) ? (virou?1:.14) : (pc>=50?1:pc>=35?.72:.46);
       } else { p.style.fill=''; p.style.fillOpacity=''; }
       var t=p.querySelector('title'); if(!t){ t=document.createElementNS('http://www.w3.org/2000/svg','title'); p.appendChild(t); }
       t.textContent=(m?m.nome:'')+(l?' — '+l.nome+' '+l.pct+'%':'');
@@ -557,19 +640,21 @@ li.c.lider img.ft{border-color:var(--gold)}
     if(munSel && $('svgMapa').querySelector('path.sel')) $('svgMapa').appendChild($('svgMapa').querySelector('path.sel'));
     var lg=$('mapaLegenda'); lg.textContent='';
     lg.appendChild(el('h3',null,cargoMapa==='presidente'?'Presidente':'Governador'));
-    lg.appendChild(el('div','sub','Quem lidera em cada município'));
+    var modoV = turno===2 && soViradas; if(modoV) conta = viradas;
+    lg.appendChild(el('div','sub',modoV?'Municípios que mudaram de vencedor desde o 1º turno':'Quem lidera em cada município'));
     var ordem=Object.keys(cores).sort(function(x,y){return (conta[y]||0)-(conta[x]||0)||Number(x)-Number(y)});
     var ul=el('ul','leg');
     ordem.forEach(function(n){
-      if(!conta[n] && comVoto) return;
+      if(!conta[n] && comVoto && !modoV) return;
+      if(modoV && !(T1 && T1.finalistas[cargoMapa].indexOf(n)>-1)) return;
       var li=el('li'); var s=el('span','cx'); s.style.background=cores[n].cor; li.appendChild(s);
       var tx=el('span','nm',cores[n].nome+' '); tx.appendChild(el('small',null,cores[n].partido)); li.appendChild(tx);
       li.appendChild(el('b',null,comVoto?String(conta[n]||0):'—')); ul.appendChild(li);
     });
     lg.appendChild(ul);
-    lg.appendChild(el('div','nota',comVoto? comVoto+' de 78 municípios com votos apurados. O número ao lado de cada nome é a quantidade de municípios em que lidera.' : 'Sem votos apurados ainda: o mapa ganha cor conforme os municípios entram na apuração.'));
-    var esc=el('div','escala'); [['.46','lidera com menos de 35%'],['.72','de 35% a 50%'],['1','mais de 50%']].forEach(function(x){ var i=el('span'); var q=el('i'); q.style.opacity=x[0]; i.appendChild(q); i.appendChild(document.createTextNode(x[1])); esc.appendChild(i); });
-    lg.appendChild(esc);
+    lg.appendChild(el('div','nota',!comVoto ? 'Sem votos apurados ainda: o mapa ganha cor conforme os municípios entram na apuração.' : modoV ? nVir+' viradas em '+comVoto+' municípios com votos apurados. O número ao lado de cada nome é quantos municípios ele tomou do adversário.' : comVoto+' de 78 municípios com votos apurados. O número ao lado de cada nome é a quantidade de municípios em que lidera.'+(turno===2&&T1?' Viradas em relação ao 1º turno: '+nVir+'.':'')));
+    if(!modoV){ var esc=el('div','escala'); [['.46','lidera com menos de 35%'],['.72','de 35% a 50%'],['1','mais de 50%']].forEach(function(x){ var i=el('span'); var q=el('i'); q.style.opacity=x[0]; i.appendChild(q); i.appendChild(document.createTextNode(x[1])); esc.appendChild(i); });
+    lg.appendChild(esc); }
     detalhe(munSel);
   }
   function detalhe(cd){
@@ -584,16 +669,24 @@ li.c.lider img.ft{border-color:var(--gold)}
       var fo=foto(cargoMapa==='presidente'?'f':'e', cargoMapa==='presidente'?'br':'es', c.sq); if(fo){ li.className+=' comft'; li.appendChild(fo); }
       var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm);
       li.appendChild(el('div','pct',c.pct+'%'));
-      li.appendChild(el('div','meta','')); li.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
+      var a1=t1mun(cd), k1=a1 && a1.c[c.n];
+      li.appendChild(el('div','meta',k1 ? '1º turno: '+k1.pct+'%'+(m.votos>0?' · '+pts(num(c.pct)-num(k1.pct)):'') : '')); li.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
       var tr=el('div','track'); var f=el('div','fill'); f.style.width=Math.min(100,num(c.pct))+'%'; if(cores[c.n]) f.style.background=cores[c.n].cor; tr.appendChild(f); li.appendChild(tr);
       ol.appendChild(li);
     });
     box.appendChild(ol);
+    var b1=t1mun(cd);
+    if(b1){
+      var l2=m.votos>0 && m.top[0];
+      if(l2 && b1.lider!==l2.n && b1.c[b1.lider]) box.appendChild(el('div','virou','Virada: no 1º turno quem liderava aqui era '+b1.c[b1.lider].nome+' ('+b1.c[b1.lider].pct+'%).'));
+      else if(b1.c[b1.lider]) box.appendChild(el('div','cmpm','No 1º turno liderou '+b1.c[b1.lider].nome+' ('+b1.c[b1.lider].pct+'%).'));
+      box.appendChild(el('div','cmpm','Abstenção: '+b1.pa+'% no 1º turno'+(m.total>0?' · '+m.pctAbstencao+'% agora':'')+'. Brancos e nulos: '+pc(b1.vb+b1.vn,b1.tv)+' no 1º turno'+(m.total>0?' · '+pc(m.brancosNulos,m.total)+' agora':'')+'.'));
+    }
   }
   function buscarMapa(){
     var meu=++pedidoMapa, cargo=cargoMapa, f=fontePedida?'&fonte='+encodeURIComponent(fontePedida):'';
     var pg = geo ? Promise.resolve(geo) : fetch('/es-mapa.json').then(function(r){return r.json()}).then(function(g){geo=g; return g});
-    Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa?cargo='+cargo+'&parte='+p+f,{cache:'no-store'}).then(function(r){ return r.ok?r.json():{municipios:{}} }).catch(function(){return {municipios:{}}}); })))
+    Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa?cargo='+cargo+'&parte='+p+qs(false),{cache:'no-store'}).then(function(r){ return r.ok?r.json():{municipios:{}} }).catch(function(){return {municipios:{}}}); })))
     .then(function(r){
       if(meu!==pedidoMapa) return;
       var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.municipios).forEach(function(k){ j[k]=x.municipios[k]; }); });
@@ -623,13 +716,13 @@ li.c.lider img.ft{border-color:var(--gold)}
     ultimo = d;
     resumo(d);
     chips(); pintar(); buscarMapa();
-    if(numConsulta) consultarCand();
+    if(numConsulta && turno===1) consultarCand();
     MAJ.forEach(function(id){
       var b = d.blocos[id];
       if(!b) return falta(id,d.erros[id]);
       majoritario(id,b,null);
     });
-    ['depFederal','depEstadual'].forEach(function(id){
+    if(turno===1) ['depFederal','depEstadual'].forEach(function(id){
       var b = d.blocos[id];
       if(!b) return falta(id,d.erros[id]);
       proporcional2(id,b);
@@ -648,9 +741,11 @@ li.c.lider img.ft{border-color:var(--gold)}
       av.textContent = 'Dados de teste do simulado do TSE, com candidatos fictícios. Não são resultados reais.';
       av.hidden = false;
     } else if(Object.keys(d.blocos).every(function(k){ return d.blocos[k].andamento==='n'; })){
-      av.textContent = Date.now() >= Date.UTC(2026,9,4,20,0,0)
+      av.textContent = Date.now() >= Date.UTC(2026,9,turno===2?25:4,20,0,0)
         ? 'As urnas fecharam às 17h. Aguardando o TSE divulgar os primeiros votos; esta página se atualiza sozinha e este aviso some assim que os dados chegarem.'
-        : 'A apuração ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 4 de outubro, e esta página passa a se atualizar sozinha.';
+        : turno===2
+          ? 'A apuração do 2º turno ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 25 de outubro, e esta página passa a se atualizar sozinha. Enquanto isso, os quadros mostram os dois candidatos de cada disputa e o resultado deles no 1º turno.'
+          : 'A apuração ainda não começou. Os votos entram a partir das 17h (horário de Brasília) de domingo, 4 de outubro, e esta página passa a se atualizar sozinha.';
       av.hidden = false;
     } else if(p && !p.podeDivulgar){
       av.textContent = 'A votação para presidente só pode ser divulgada após o fechamento das urnas em todo o país.';
@@ -700,7 +795,7 @@ li.c.lider img.ft{border-color:var(--gold)}
   function buscar(){
     clearInterval(timer);
     $('prox').textContent = 'Atualizando…';
-    var q = '/api/painel'+(fontePedida?'?fonte='+encodeURIComponent(fontePedida):'');
+    var q = '/api/painel'+qs(true);
     fetch(q,{cache:'no-store'}).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -709,7 +804,7 @@ li.c.lider img.ft{border-color:var(--gold)}
     }).catch(function(e){ console.error(e);
       $('fonte').className='pill err';
       $('fonteTxt').textContent = 'SEM CONEXÃO';
-      if(!ultimo) MAJ.concat(['depFederal','depEstadual']).forEach(function(id){falta(id)});
+      if(!ultimo) MAJ.concat(turno===1?['depFederal','depEstadual']:[]).forEach(function(id){falta(id)});
     }).then(agendar);
   }
 
@@ -724,6 +819,28 @@ li.c.lider img.ft{border-color:var(--gold)}
     },1000);
   }
   document.addEventListener('visibilitychange',function(){ if(!document.hidden && restante<=0) buscar(); });
+
+  // ---- Alternância entre 2º turno e resultado final do 1º ----
+  function aplicarTurno(){
+    document.body.classList.toggle('t2',turno===2);
+    MAJ = turno===2 ? MAJ_T2 : MAJ_T1;
+    $('lema').textContent = turno===2 ? 'Eleições 2026 · 2º turno · 25 de outubro' : 'Eleições 2026 · 1º turno · 4 de outubro';
+    $('h2ES').textContent = turno===2 ? 'Governador do Espírito Santo' : 'Espírito Santo';
+    var box=$('turnos'); box.textContent='';
+    if(fontePedida==='simulado') return;
+    [[2,'2º turno · 25 de outubro'],[1,'1º turno · resultado final']].forEach(function(x){
+      var b=el('button',null,x[1]); b.type='button'; b.setAttribute('aria-pressed',String(turno===x[0]));
+      b.onclick=function(){
+        if(turno===x[0]) return;
+        turno=x[0]; ultimo=null; dadosMapa=null; soViradas=false; abertos={};
+        try{ var u=new URL(location.href); if(turno===1) u.searchParams.set('turno','1'); else u.searchParams.delete('turno'); history.replaceState(null,'',u); }catch(e){}
+        aplicarTurno(); buscar();
+      };
+      box.appendChild(b);
+    });
+  }
+  aplicarTurno();
+  fetch('/t1.json').then(function(r){ return r.ok?r.json():null; }).then(function(j){ T1=j; if(ultimo) desenhar(ultimo); }).catch(function(){});
   buscar();
 })();
 </script>

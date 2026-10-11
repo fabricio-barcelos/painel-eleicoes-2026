@@ -10,6 +10,8 @@ const FONTES = {
     base: 'https://resultados.tse.jus.br/oficial/ele2026',
     federal: '6257', // Eleição Geral Federal (Presidente) - 1º turno, 04/10/2026
     estadual: '6259', // Eleições Gerais Estaduais - 1º turno, 04/10/2026
+    federal2: '6258', // Presidente - 2º turno, 25/10/2026
+    estadual2: '6260', // Governador - 2º turno, 25/10/2026
   },
   simulado: {
     base: 'https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026',
@@ -107,9 +109,11 @@ const TOP_PROPORCIONAL = 40;
 
 const pad6 = (n) => String(n).padStart(6, '0');
 
-export function urlArquivo(fonte, tipo, abr, cargo) {
+// turno: 1 (padrão) ou 2. O 2º turno só existe no ambiente oficial.
+export function urlArquivo(fonte, tipo, abr, cargo, turno) {
   const f = FONTES[fonte];
-  const ele = tipo === 'federal' ? f.federal : f.estadual;
+  const chave = tipo === 'federal' ? 'federal' : 'estadual';
+  const ele = (turno === 2 && f[chave + '2']) || f[chave];
   return `${f.base}/${ele}/dados/${abr.slice(0, 2)}/${abr}-c${cargo}-e${pad6(ele)}-u.json`;
 }
 
@@ -123,6 +127,12 @@ export async function baixar(url) {
   } catch (e) {
     return { erro: String(e && e.message ? e.message : e) };
   }
+}
+
+// O painel abre no 2º turno; ?turno=1 mostra o resultado final de 04/10. O simulado só tem 1º turno.
+export function resolverTurno(url, fonte) {
+  if (fonte !== 'oficial') return 1;
+  return url.searchParams.get('turno') === '1' ? 1 : 2;
 }
 
 // Reduz o arquivo EA20 ao que o painel usa.
@@ -185,6 +195,7 @@ export function enxugar(j, limite) {
       pctComparecimento: e.pc || '0,00',
       abstencao: Number(e.a || 0),
       pctAbstencao: e.pa || '0,00',
+      naoApurado: Number(e.esnt || 0), // eleitores das seções ainda não totalizadas
     },
     votos: {
       total: Number(v.tv || 0),
@@ -209,7 +220,7 @@ async function resolverFonte(pedido, env) {
   return 'oficial';
 }
 
-export async function montarPainel(fonte, mun) {
+export async function montarPainel(fonte, mun, turno) {
   const m = `${UF}${mun}`;
   const pedidos = {
     presidenteBR: ['federal', 'br', '0001'],
@@ -219,9 +230,11 @@ export async function montarPainel(fonte, mun) {
     depFederal: ['estadual', UF, '0006', TOP_PROPORCIONAL],
     depEstadual: ['estadual', UF, '0007', TOP_PROPORCIONAL],
   };
+  // No 2º turno só há disputa para Presidente e Governador.
+  if (turno === 2) for (const k of ['senador', 'depFederal', 'depEstadual']) delete pedidos[k];
   const chaves = Object.keys(pedidos);
   const respostas = await Promise.all(
-    chaves.map((k) => baixar(urlArquivo(fonte, pedidos[k][0], pedidos[k][1], pedidos[k][2]))),
+    chaves.map((k) => baixar(urlArquivo(fonte, pedidos[k][0], pedidos[k][1], pedidos[k][2], turno))),
   );
   const blocos = {};
   const erros = {};
@@ -238,6 +251,7 @@ export async function montarPainel(fonte, mun) {
   });
   return {
     fonte,
+    turno: turno === 2 ? 2 : 1,
     municipio: { cd: mun, nome: MUNICIPIOS[mun] },
     municipios: MUNICIPIOS,
     consultadoEm: new Date().toISOString(),
@@ -255,13 +269,14 @@ export async function onRequestGet({ request, env, waitUntil }) {
   const cache = typeof caches !== 'undefined' ? caches.default : null;
   const fonte = await resolverFonte(pedido, env, cache);
 
-  const chave = new Request(`https://painel.interno/painel?fonte=${fonte}&mun=${mun}`);
+  const turno = resolverTurno(url, fonte);
+  const chave = new Request(`https://painel.interno/painel?fonte=${fonte}&mun=${mun}&turno=${turno}`);
   if (cache) {
     const pronto = await cache.match(chave);
     if (pronto) return pronto;
   }
 
-  const corpo = await montarPainel(fonte, mun);
+  const corpo = await montarPainel(fonte, mun, turno);
   const tudoFalhou = Object.keys(corpo.blocos).length === 0;
   const resp = new Response(JSON.stringify(corpo), {
     status: tudoFalhou ? 502 : 200,
