@@ -1,0 +1,24 @@
+name: Coletor TSE -> KV
+# Espelha os arquivos do TSE no KV da Cloudflare a cada 30 s, porque o TSE bloqueia as bordas da Cloudflare (25/10/2026).
+# Cada execução dura 5h40; o agendamento a cada 5 h emenda uma na outra. Segredos: CF_API_TOKEN, CF_KV_NS (e CF_ACCOUNT_ID).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 */5 * * *'
+concurrency:
+  group: coletor
+  cancel-in-progress: false
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/coletor.mjs 20400 30
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || '9dedc69fe409cd6b18da221e111e83cf' }}
+          CF_KV_NS: ${{ secrets.CF_KV_NS }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

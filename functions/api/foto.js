@@ -3,7 +3,7 @@
 // para o painel não bater no TSE a cada visitante.
 const ELE = { f: '6257', e: '6259' };
 
-export async function onRequestGet({ request, waitUntil }) {
+export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const t = url.searchParams.get('t');
   const uf = (url.searchParams.get('uf') || '').toLowerCase();
@@ -14,6 +14,18 @@ export async function onRequestGet({ request, waitUntil }) {
   const chave = new Request(`https://painel.interno/foto/${t}/${uf}/${sq}`);
   if (cache) { const pronto = await cache.match(chave); if (pronto) return pronto; }
 
+  // Foto espelhada no KV pelo coletor (chave oficial/ele2026/<ele>/fotos/<uf>/<sq>.jpeg, em base64).
+  if (env && env.TSE) {
+    try {
+      const b64 = await env.TSE.get(`oficial/ele2026/${ELE[t]}/fotos/${uf}/${sq}.jpeg`, 'text');
+      if (b64) {
+        const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const resp = new Response(bin, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=604800' } });
+        if (cache) { const p = cache.put(chave, resp.clone()); if (waitUntil) waitUntil(p); else await p; }
+        return resp;
+      }
+    } catch (e) { /* cai na busca direta */ }
+  }
   let r;
   try { r = await fetch(`https://resultados.tse.jus.br/oficial/ele2026/${ELE[t]}/fotos/${uf}/${sq}.jpeg`); } catch (e) { return new Response('indisponivel', { status: 502 }); }
   if (!r.ok) return new Response('sem foto', { status: 404, headers: { 'cache-control': 'public, max-age=600' } });

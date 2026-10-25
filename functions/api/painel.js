@@ -117,7 +117,19 @@ export function urlArquivo(fonte, tipo, abr, cargo, turno) {
   return `${f.base}/${ele}/dados/${abr.slice(0, 2)}/${abr}-c${cargo}-e${pad6(ele)}-u.json`;
 }
 
+// Espelho dos arquivos do TSE no KV da Cloudflare (binding TSE), alimentado por .github/workflows/coletor.yml.
+// Necessário desde 25/10/2026: o TSE (Akamai) responde 403 às bordas da Cloudflare. Sem KV, busca direto.
+let KV = null;
+export function usarKV(env) { KV = env && env.TSE ? env.TSE : null; }
+const chaveKV = (url) => url.replace('https://resultados.tse.jus.br/', '');
+
 export async function baixar(url) {
+  if (KV) {
+    try {
+      const txt = await KV.get(chaveKV(url), 'text');
+      if (txt) return { dados: JSON.parse(txt) };
+    } catch (e) { /* cai na busca direta */ }
+  }
   try {
     const r = await fetch(url, {
       headers: { accept: 'application/json', 'user-agent': 'painel-eleicoes-es/1.0' },
@@ -261,6 +273,7 @@ export async function montarPainel(fonte, mun, turno) {
 }
 
 export async function onRequestGet({ request, env, waitUntil }) {
+  usarKV(env);
   const url = new URL(request.url);
   let mun = url.searchParams.get('mun') || '57037';
   if (!MUNICIPIOS[mun]) mun = '57037';

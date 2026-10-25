@@ -2,7 +2,7 @@
 // Devolve, para cada município do ES, o líder e os três primeiros colocados do cargo.
 // São 78 arquivos do TSE; a Cloudflare limita 50 buscas por chamada, então a lista vem em duas partes.
 // Cada parte fica 60 s em cache na borda.
-import { MUNICIPIOS, urlArquivo, baixar, resolverTurno } from './painel.js';
+import { MUNICIPIOS, urlArquivo, baixar, resolverTurno, usarKV } from './painel.js';
 
 const TTL = 60;
 const CARGOS = { presidente: ['federal', '0001'], governador: ['estadual', '0003'] };
@@ -46,6 +46,7 @@ export async function montarMapa(fonte, cargo, parte, turno) {
 }
 
 export async function onRequestGet({ request, env, waitUntil }) {
+  usarKV(env);
   const url = new URL(request.url);
   const cargo = CARGOS[url.searchParams.get('cargo')] ? url.searchParams.get('cargo') : 'governador';
   const parte = url.searchParams.get('parte') === '2' ? 2 : 1;
