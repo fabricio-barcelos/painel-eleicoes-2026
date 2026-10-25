@@ -1,6 +1,6 @@
 // GET /api/candidato?n=1234[&fonte=simulado]
 // Procura o número entre os candidatos a senador, deputado federal e deputado estadual do ES e devolve os votos de cada candidato encontrado.
-import { urlArquivo, baixar } from './painel.js';
+import { urlArquivo, baixar, usarKV } from './painel.js';
 import { projetarProporcional } from '../../lib/proporcional.js';
 
 const fmt = (n) => Number(n).toLocaleString('pt-BR');
@@ -84,6 +84,7 @@ export async function consultar(fonte, numero) {
 }
 
 export async function onRequestGet({ request, env, waitUntil }) {
+  usarKV(env);
   const url = new URL(request.url);
   const numero = (url.searchParams.get('n') || '').replace(/\D/g, '').slice(0, 5);
   if (numero.length < 3) {
