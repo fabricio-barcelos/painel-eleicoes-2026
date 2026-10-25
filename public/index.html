@@ -786,13 +786,18 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
       var d2=el('div','k'); d2.appendChild(el('small',null,'Seções com boletim')); d2.appendChild(el('b',null,nf.format(t.recebidas))); d2.appendChild(el('i',null,' de '+nf.format(t.secoes))); k.appendChild(d2);
       var d3=el('div','k'); d3.appendChild(el('small',null,'Compareceram')); d3.appendChild(el('b',null,nf.format(t.comp))); d3.appendChild(el('i',null,' brancos '+nf.format(t.br)+' · nulos '+nf.format(t.nu))); k.appendChild(d3);
       box.appendChild(k);
-      var cid=Object.keys(j.cidades).map(function(c){return j.cidades[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
-      var lim=extAberto?cid.length:12, tb=el('table'), hd=el('thead'), hr=el('tr');
-      ['Cidade','Seções'].concat(ord.map(function(n){return (j.cands[n]||{nome:n}).nome})).concat(['Votantes']).forEach(function(x,i){ hr.appendChild(el('th',i?'r':null,x)); }); hd.appendChild(hr); tb.appendChild(hd);
-      var co=el('tbody');
-      cid.slice(0,lim).forEach(function(c){ var tr=el('tr'); tr.appendChild(el('td',null,c.nome)); tr.appendChild(el('td','r',c.recebidas+'/'+c.secoes)); var cv=ord.reduce(function(s,n){return s+(c.v[n]||0)},0); ord.forEach(function(n){ var td=el('td','r',nf.format(c.v[n]||0)+(cv?' ('+((c.v[n]||0)/cv*100).toFixed(0)+'%)':'')); if(cv && (c.v[n]||0)===Math.max.apply(null,ord.map(function(m){return c.v[m]||0}))) td.style.fontWeight='700'; tr.appendChild(td); }); tr.appendChild(el('td','r',nf.format(c.comp))); co.appendChild(tr); });
-      tb.appendChild(co); box.appendChild(tb);
-      if(cid.length>12){ var bt=el('button','mais',extAberto?'Mostrar menos':'Ver as '+cid.length+' cidades'); bt.type='button'; bt.onclick=function(){extAberto=!extAberto; exterior();}; box.appendChild(bt); }
+      function tabela(titulo,lista,colExtra){
+        var tb=el('table'), hd=el('thead'), hr=el('tr');
+        [titulo,colExtra,'Seções'].concat(ord.map(function(n){return (j.cands[n]||{nome:n}).nome})).concat(['Votantes']).forEach(function(x,i){ hr.appendChild(el('th',i?'r':null,x)); }); hd.appendChild(hr); tb.appendChild(hd);
+        var co=el('tbody');
+        lista.forEach(function(c){ var tr=el('tr'); tr.appendChild(el('td',null,c.nome)); tr.appendChild(el('td','r',String(c.paises!=null?c.paises:c.cidades))); tr.appendChild(el('td','r',c.recebidas+'/'+c.secoes)); var cv=ord.reduce(function(s,n){return s+(c.v[n]||0)},0), mx=Math.max.apply(null,ord.map(function(m){return c.v[m]||0})); ord.forEach(function(n){ var td=el('td','r',nf.format(c.v[n]||0)+(cv?' ('+((c.v[n]||0)/cv*100).toFixed(0)+'%)':'')); if(cv&&(c.v[n]||0)===mx) td.style.fontWeight='700'; tr.appendChild(td); }); tr.appendChild(el('td','r',nf.format(c.comp))); co.appendChild(tr); });
+        tb.appendChild(co); return tb;
+      }
+      var cont=Object.keys(j.continentes).map(function(c){return j.continentes[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
+      box.appendChild(el('h4',null,'Por continente')); box.appendChild(tabela('Continente',cont,'Países'));
+      var pai=Object.keys(j.paises).map(function(c){return j.paises[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
+      box.appendChild(el('h4',null,'Por país')); box.appendChild(tabela('País',pai.slice(0,extAberto?pai.length:15),'Cidades'));
+      if(pai.length>15){ var bt=el('button','mais',extAberto?'Mostrar menos':'Ver os '+pai.length+' países'); bt.type='button'; bt.onclick=function(){extAberto=!extAberto; exterior();}; box.appendChild(bt); }
       box.appendChild(el('div','sub prox','Atualizado '+(j.atualizado?new Date(j.atualizado).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}):'')+' · seções que não aparecem ainda não encerraram ou não publicaram boletim.'));
     }).catch(function(){});
   }
