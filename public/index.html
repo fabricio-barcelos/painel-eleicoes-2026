@@ -249,12 +249,6 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
   <p class="aviso" id="aviso" hidden></p>
   <div class="resumo" id="resumo"></div>
 
-  <h2>Presidente da República</h2>
-  <div class="grid">
-    <section class="card" id="presidenteBR"></section>
-    <section class="card" id="presidenteES"></section>
-  </div>
-
   <h2 id="h2ES">Espírito Santo</h2>
   <div class="grid">
     <section class="card" id="governador"></section>
@@ -281,6 +275,12 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     <div class="palco" id="brPalco"><div class="vazio">Carregando o mapa…</div></div>
     <div class="lado" id="brDetalhe"></div>
   </section>
+  <h2>Presidente da República</h2>
+  <div class="grid">
+    <section class="card" id="presidenteBR"></section>
+    <section class="card t1" id="presidenteES"></section>
+  </div>
+
   <h2>Presidente por região</h2>
   <div class="grid regioes" id="regioes"></div>
 
@@ -329,7 +329,7 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     depFederal:['Deputado Federal','10 vagas'],
     depEstadual:['Deputado Estadual','30 vagas']
   };
-  var MAJ_T1 = ['presidenteBR','presidenteES','governador','senador'], MAJ_T2 = ['presidenteBR','presidenteES','governador'];
+  var MAJ_T1 = ['presidenteBR','presidenteES','governador','senador'], MAJ_T2 = ['presidenteBR','governador'];
   var MAJ = turno===2 ? MAJ_T2 : MAJ_T1;
   var nf = new Intl.NumberFormat('pt-BR');
 
