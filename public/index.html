@@ -773,8 +773,16 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
   }
   var REGIOES=[['Sudeste','sp mg rj es'],['Nordeste','ba pe ce ma pb rn al pi se'],['Sul','rs pr sc'],['Norte','pa am ro to ac ap rr'],['Centro-Oeste','go mt ms df']];
   // Um card por região: soma dos estados para Presidente.
+  var dadosBr1=null, pedidoBr1=false; // Presidente por estado no 1º turno (final), para comparação
+  function buscarBr1(){
+    if(pedidoBr1 || turno!==2) return; pedidoBr1=true;
+    Promise.all([1,2].map(function(p){ return fetch('/api/mapa-br?parte='+p+'&turno=1',{cache:'no-store'}).then(function(r){ return r.ok?r.json():{estados:{}} }).catch(function(){return {estados:{}}}); }))
+    .then(function(r){ var j={}; r.forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length){ dadosBr1=j; cardsRegioes(); } else pedidoBr1=false; });
+  }
+  function somaRegiao(dados,ufs){ var vv=0,porN={}; ufs.forEach(function(u){ var m=dados&&dados[u]; if(!m) return; vv+=m.votos; m.top.forEach(function(c){ porN[c.n]=(porN[c.n]||0)+c.votos; }); }); return {vv:vv,porN:porN}; }
   function cardsRegioes(){
     var box=$('regioes'); box.textContent=''; if(!dadosBr) return;
+    if(turno===2 && !dadosBr1) buscarBr1();
     var cores=corPres(), fin=(ultimo&&ultimo.blocos.presidenteBR?ultimo.blocos.presidenteBR.cands.slice(0,2):[]).map(function(c){return c.n});
     REGIOES.forEach(function(r){
       var ufs=r[1].split(' '), vv=0, tv=0, ap=0, abs=0, bn=0, st=0, ts=0, porN={}, sq={};
@@ -783,7 +791,10 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
       var pctS=ts?st/ts*100:0; top.appendChild(el('span','tag '+(pctS>=100?'':'neutro'),pctS>=100?'100% apurado':vv?'Em apuração':'Aguardando')); card.appendChild(top);
       var apd=el('div','apur'); var n=el('div','n'); var e=el('span'); e.appendChild(el('b',null,pctS.toFixed(2).replace('.',',')+'%')); e.appendChild(document.createTextNode(' das seções')); n.appendChild(e); n.appendChild(el('span',null,nf.format(st)+' de '+nf.format(ts))); apd.appendChild(n); var tr=el('div','track'); var f=el('div','fill'); f.style.width=pctS+'%'; tr.appendChild(f); apd.appendChild(tr); card.appendChild(apd);
       var ol=el('ol'); var ord=fin.slice().sort(function(a,b){return (porN[b]||0)-(porN[a]||0)});
-      ord.forEach(function(nn,i){ var c=cores[nn]||{nome:nn,partido:'',cor:'#999'}; var li=el('li','c'+(vv>0&&i===0?' lider':'')); var fo=foto('f','br',sq[nn]); if(fo){ li.className+=' comft'; li.appendChild(fo); } var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm); var pc=vv?(porN[nn]||0)/vv*100:0; li.appendChild(el('div','pct',pc.toFixed(2).replace('.',',')+'%')); li.appendChild(el('div','meta','')); li.appendChild(el('div','vt',nf.format(porN[nn]||0)+' votos')); var tk=el('div','track meio'); var fl=el('div','fill'); fl.style.width=pc+'%'; fl.style.background=c.cor; tk.appendChild(fl); li.appendChild(tk); ol.appendChild(li); });
+      var r1=turno===2&&dadosBr1?somaRegiao(dadosBr1,ufs):null;
+      ord.forEach(function(nn,i){ var c=cores[nn]||{nome:nn,partido:'',cor:'#999'}; var li=el('li','c'+(vv>0&&i===0?' lider':'')); var fo=foto('f','br',sq[nn]); if(fo){ li.className+=' comft'; li.appendChild(fo); } var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm); var pc=vv?(porN[nn]||0)/vv*100:0; li.appendChild(el('div','pct',pc.toFixed(2).replace('.',',')+'%'));
+        var meta=''; if(r1&&r1.vv){ var p1=(r1.porN[nn]||0)/r1.vv*100; meta='1º turno: '+p1.toFixed(2).replace('.',',')+'%'+(vv?' · '+pts(pc-p1):''); }
+        li.appendChild(el('div','meta',meta)); li.appendChild(el('div','vt',nf.format(porN[nn]||0)+' votos')); var tk=el('div','track meio'); var fl=el('div','fill'); fl.style.width=pc+'%'; fl.style.background=c.cor; tk.appendChild(fl); li.appendChild(tk); ol.appendChild(li); });
       card.appendChild(ol);
       var rod=el('div','rod'); rod.appendChild(el('span',null,'Válidos '+nf.format(vv))); rod.appendChild(el('span',null,'Brancos e nulos '+(tv?(bn/tv*100).toFixed(2).replace('.',','):'0,00')+'%')); if(abs>0) rod.appendChild(el('span',null,'Abstenção '+(abs/ap*100).toFixed(2).replace('.',',')+'%')); card.appendChild(rod);
       box.appendChild(card);
