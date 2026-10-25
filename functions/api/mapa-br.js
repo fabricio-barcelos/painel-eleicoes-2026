@@ -12,7 +12,7 @@ function resumir(j) {
     cands.push({ n: c.n, sq: c.sqcand || '', nome: c.nmu || c.nm, partido: par.sg, votos: Number(c.vap || 0), pct: c.pvap || '0,00' });
   cands.sort((a, b) => b.votos - a.votos);
   const s = j.s || {}, v = j.v || {}, e = j.e || {};
-  return { pctSecoes: s.pst || '0,00', votos: Number(v.vv || 0), total: Number(v.tv || 0), brancosNulos: Number(v.vb || 0) + Number(v.tvn || 0), pctAbstencao: e.pa || '0,00', top: cands.slice(0, 3) };
+  return { pctSecoes: s.pst || '0,00', secoes: Number(s.ts || 0), secoesTot: Number(s.st || 0), votos: Number(v.vv || 0), total: Number(v.tv || 0), brancosNulos: Number(v.vb || 0) + Number(v.tvn || 0), pctAbstencao: e.pa || '0,00', top: cands.slice(0, 3) };
 }
 
 export async function onRequestGet({ request, env, waitUntil }) {

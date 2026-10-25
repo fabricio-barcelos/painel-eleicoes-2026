@@ -231,8 +231,7 @@ table.cmp td small{display:block;color:var(--mute);font-size:11.5px}
 table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-weight:700}
 .mapa .virou{margin-top:10px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--warn-bg);font-size:13px}
 .mapa .cmpm{margin-top:10px;font-size:12.5px;color:var(--mute)}
-#extCorpo{margin-top:12px}#extCorpo .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}#extCorpo .k{border:1px solid var(--line);border-radius:10px;padding:10px 12px}#extCorpo .k small{display:block;font:500 10.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}#extCorpo .k b{font-size:20px}#extCorpo .k i{font-style:normal;color:var(--mute);font-size:12px}
-#extCorpo table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}#extCorpo th{text-align:left;font:700 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:6px 4px;border-bottom:1px solid var(--line)}#extCorpo td{padding:6px 4px;border-bottom:1px solid var(--line)}#extCorpo .r{text-align:right}#extCorpo th.r{text-align:right}
+.grid.regioes{grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
 </style>
 </head>
 <body>
@@ -282,10 +281,8 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     <div class="palco" id="brPalco"><div class="vazio">Carregando o mapa…</div></div>
     <div class="lado" id="brDetalhe"></div>
   </section>
-  <section class="card" id="secExt" hidden>
-    <div class="top"><div><h3>Voto no exterior · boletins de urna</h3><div class="sub">Soma dos boletins já publicados pelo TSE nas seções do exterior que encerraram a votação. Parcial e não oficial: o TSE só totaliza o exterior após as 17h.</div></div><span class="tag neutro" id="extTag">Parcial</span></div>
-    <div id="extCorpo"></div>
-  </section>
+  <h2>Presidente por região</h2>
+  <div class="grid regioes" id="regioes"></div>
 
   <h2 class="t1">Consulta por número · Senador e Deputados</h2>
   <section class="card consulta t1">
@@ -774,38 +771,29 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     if(m.total>0) box.appendChild(el('div','cmpm','Abstenção '+m.pctAbstencao+'% · brancos e nulos '+pc(m.brancosNulos,m.total)));
     var ex=dadosBr && dadosBr.zz; if(uf!=='zz' && ex && ex.votos>0 && ex.top[0]) box.appendChild(el('div','cmpm','Exterior: '+ex.top[0].nome+' '+ex.top[0].pct+'% ('+nf.format(ex.votos)+' válidos).'));
   }
-  var extAberto=false;
-  function exterior(){
-    if(turno!==2){ $('secExt').hidden=true; return; }
-    fetch('/api/exterior',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
-      var sec=$('secExt'), box=$('extCorpo'); if(!j||!j.total||!j.total.comp){ sec.hidden=true; return; }
-      sec.hidden=false; box.textContent='';
-      var t=j.total, cores=corPres(), vv=Object.keys(t.v).reduce(function(s,n){return s+t.v[n]},0), ord=Object.keys(t.v).sort(function(a,b){return t.v[b]-t.v[a]});
-      var k=el('div','kpis');
-      ord.forEach(function(n){ var c=j.cands[n]||{nome:n,partido:''}; var d=el('div','k'); d.appendChild(el('small',null,c.nome+' · '+c.partido)); var b=el('b',null,vv?(t.v[n]/vv*100).toFixed(1).replace('.',',')+'%':'—'); b.style.color=(cores[n]&&cores[n].cor)||'inherit'; d.appendChild(b); d.appendChild(el('i',null,' '+nf.format(t.v[n])+' votos')); k.appendChild(d); });
-      var d2=el('div','k'); d2.appendChild(el('small',null,'Seções com boletim')); d2.appendChild(el('b',null,nf.format(t.recebidas))); d2.appendChild(el('i',null,' de '+nf.format(t.secoes))); k.appendChild(d2);
-      var d3=el('div','k'); d3.appendChild(el('small',null,'Compareceram')); d3.appendChild(el('b',null,nf.format(t.comp))); d3.appendChild(el('i',null,' brancos '+nf.format(t.br)+' · nulos '+nf.format(t.nu))); k.appendChild(d3);
-      box.appendChild(k);
-      function tabela(titulo,lista,colExtra){
-        var tb=el('table'), hd=el('thead'), hr=el('tr');
-        [titulo,colExtra,'Seções'].concat(ord.map(function(n){return (j.cands[n]||{nome:n}).nome})).concat(['Votantes']).forEach(function(x,i){ hr.appendChild(el('th',i?'r':null,x)); }); hd.appendChild(hr); tb.appendChild(hd);
-        var co=el('tbody');
-        lista.forEach(function(c){ var tr=el('tr'); tr.appendChild(el('td',null,c.nome)); tr.appendChild(el('td','r',String(c.paises!=null?c.paises:c.cidades))); tr.appendChild(el('td','r',c.recebidas+'/'+c.secoes)); var cv=ord.reduce(function(s,n){return s+(c.v[n]||0)},0), mx=Math.max.apply(null,ord.map(function(m){return c.v[m]||0})); ord.forEach(function(n){ var td=el('td','r',nf.format(c.v[n]||0)+(cv?' ('+((c.v[n]||0)/cv*100).toFixed(0)+'%)':'')); if(cv&&(c.v[n]||0)===mx) td.style.fontWeight='700'; tr.appendChild(td); }); tr.appendChild(el('td','r',nf.format(c.comp))); co.appendChild(tr); });
-        tb.appendChild(co); return tb;
-      }
-      var cont=Object.keys(j.continentes).map(function(c){return j.continentes[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
-      box.appendChild(el('h4',null,'Por continente')); box.appendChild(tabela('Continente',cont,'Países'));
-      var pai=Object.keys(j.paises).map(function(c){return j.paises[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
-      box.appendChild(el('h4',null,'Por país')); box.appendChild(tabela('País',pai.slice(0,extAberto?pai.length:15),'Cidades'));
-      if(pai.length>15){ var bt=el('button','mais',extAberto?'Mostrar menos':'Ver os '+pai.length+' países'); bt.type='button'; bt.onclick=function(){extAberto=!extAberto; exterior();}; box.appendChild(bt); }
-      box.appendChild(el('div','sub prox','Atualizado '+(j.atualizado?new Date(j.atualizado).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}):'')+' · seções que não aparecem ainda não encerraram ou não publicaram boletim.'));
-    }).catch(function(){});
+  var REGIOES=[['Sudeste','sp mg rj es'],['Nordeste','ba pe ce ma pb rn al pi se'],['Sul','rs pr sc'],['Norte','pa am ro to ac ap rr'],['Centro-Oeste','go mt ms df']];
+  // Um card por região: soma dos estados para Presidente.
+  function cardsRegioes(){
+    var box=$('regioes'); box.textContent=''; if(!dadosBr) return;
+    var cores=corPres(), fin=(ultimo&&ultimo.blocos.presidenteBR?ultimo.blocos.presidenteBR.cands.slice(0,2):[]).map(function(c){return c.n});
+    REGIOES.forEach(function(r){
+      var ufs=r[1].split(' '), vv=0, tv=0, ap=0, abs=0, bn=0, st=0, ts=0, porN={}, sq={};
+      ufs.forEach(function(u){ var m=dadosBr[u]; if(!m) return; vv+=m.votos; tv+=m.total; ap+=m.aptos||0; abs+=m.abstencao||0; bn+=m.brancosNulos||0; m.top.forEach(function(c){ porN[c.n]=(porN[c.n]||0)+c.votos; sq[c.n]=c.sq; }); st+=m.secoesTot||0; ts+=m.secoes||0; });
+      var card=el('section','card'); var top=el('div','top'); var t=el('div'); t.appendChild(el('h3',null,r[0])); t.appendChild(el('div','sub',ufs.length+' estados · '+ufs.join(', ').toUpperCase())); top.appendChild(t);
+      var pctS=ts?st/ts*100:0; top.appendChild(el('span','tag '+(pctS>=100?'':'neutro'),pctS>=100?'100% apurado':vv?'Em apuração':'Aguardando')); card.appendChild(top);
+      var apd=el('div','apur'); var n=el('div','n'); var e=el('span'); e.appendChild(el('b',null,pctS.toFixed(2).replace('.',',')+'%')); e.appendChild(document.createTextNode(' das seções')); n.appendChild(e); n.appendChild(el('span',null,nf.format(st)+' de '+nf.format(ts))); apd.appendChild(n); var tr=el('div','track'); var f=el('div','fill'); f.style.width=pctS+'%'; tr.appendChild(f); apd.appendChild(tr); card.appendChild(apd);
+      var ol=el('ol'); var ord=fin.slice().sort(function(a,b){return (porN[b]||0)-(porN[a]||0)});
+      ord.forEach(function(nn,i){ var c=cores[nn]||{nome:nn,partido:'',cor:'#999'}; var li=el('li','c'+(vv>0&&i===0?' lider':'')); var fo=foto('f','br',sq[nn]); if(fo){ li.className+=' comft'; li.appendChild(fo); } var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm); var pc=vv?(porN[nn]||0)/vv*100:0; li.appendChild(el('div','pct',pc.toFixed(2).replace('.',',')+'%')); li.appendChild(el('div','meta','')); li.appendChild(el('div','vt',nf.format(porN[nn]||0)+' votos')); var tk=el('div','track meio'); var fl=el('div','fill'); fl.style.width=pc+'%'; fl.style.background=c.cor; tk.appendChild(fl); li.appendChild(tk); ol.appendChild(li); });
+      card.appendChild(ol);
+      var rod=el('div','rod'); rod.appendChild(el('span',null,'Válidos '+nf.format(vv))); rod.appendChild(el('span',null,'Brancos e nulos '+(tv?(bn/tv*100).toFixed(2).replace('.',','):'0,00')+'%')); if(abs>0) rod.appendChild(el('span',null,'Abstenção '+(abs/ap*100).toFixed(2).replace('.',',')+'%')); card.appendChild(rod);
+      box.appendChild(card);
+    });
   }
   function buscarBr(){
     var meu=++pedidoBr;
     var pg = geoBr ? Promise.resolve(geoBr) : fetch('/br-mapa.json').then(function(r){return r.json()}).then(function(g){geoBr=g; return g});
     Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa-br?parte='+p+qs(false),{cache:'no-store'}).then(function(r){ return r.ok?r.json():{estados:{}} }).catch(function(){return {estados:{}}}); })))
-    .then(function(r){ if(meu!==pedidoBr) return; var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length||!dadosBr) dadosBr=j; pintarBr(); }).catch(function(e){ console.error(e); });
+    .then(function(r){ if(meu!==pedidoBr) return; var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length||!dadosBr) dadosBr=j; pintarBr(); cardsRegioes(); }).catch(function(e){ console.error(e); });
   }
 
   function kpi(box,l,v,d,pct,num){
@@ -828,7 +816,7 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
   function desenhar(d){
     ultimo = d;
     resumo(d);
-    chips(); pintar(); buscarMapa(); buscarBr(); exterior();
+    chips(); pintar(); buscarMapa(); buscarBr();
     if(numConsulta && turno===1) consultarCand();
     MAJ.forEach(function(id){
       var b = d.blocos[id];
