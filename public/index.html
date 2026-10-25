@@ -274,6 +274,13 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     <div class="lado" id="mapaDetalhe"></div>
   </section>
 
+  <h2>Presidente por estado</h2>
+  <section class="card mapa" id="secBr">
+    <div class="lado" id="brLegenda"></div>
+    <div class="palco" id="brPalco"><div class="vazio">Carregando o mapa…</div></div>
+    <div class="lado" id="brDetalhe"></div>
+  </section>
+
   <h2 class="t1">Consulta por número · Senador e Deputados</h2>
   <section class="card consulta t1">
     <form id="formCand" autocomplete="off">
@@ -695,6 +702,79 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     }).catch(function(e){ console.error(e); });
   }
 
+  // ---- Mapa do Brasil por estado (Presidente) ----
+  var geoBr=null, dadosBr=null, ufSel='es', pedidoBr=0;
+  function corPres(){
+    var b=ultimo && ultimo.blocos.presidenteBR, m={}; if(!b) return m;
+    b.cands.slice().sort(function(x,y){return Number(x.n)-Number(y.n)}).forEach(function(c,i){ m[c.n]={cor:COR_CANDIDATO['presidente:'+c.n]||COR_PARTIDO[String(c.partido).trim().toUpperCase()]||CORES[i%CORES.length],nome:c.nome,partido:c.partido}; });
+    return m;
+  }
+  function montarBr(){
+    var NS='http://www.w3.org/2000/svg', svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('viewBox','-6 -6 '+(geoBr.w+12)+' '+(geoBr.h+12)); svg.setAttribute('role','img'); svg.setAttribute('aria-label','Mapa do Brasil por estado'); svg.id='svgBr';
+    Object.keys(geoBr.m).forEach(function(uf){
+      var p=document.createElementNS(NS,'path'); p.setAttribute('d',geoBr.m[uf]); p.setAttribute('data-uf',uf); p.setAttribute('tabindex','0');
+      p.addEventListener('click',function(){ ufSel=uf; pintarBr(); });
+      p.addEventListener('mouseenter',function(){ detalheBr(uf); });
+      p.addEventListener('mouseleave',function(){ detalheBr(ufSel); });
+      p.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); ufSel=uf; pintarBr(); } });
+      svg.appendChild(p);
+    });
+    var palco=$('brPalco'); palco.textContent=''; palco.appendChild(svg);
+  }
+  function pintarBr(){
+    if(!geoBr) return; if(!$('svgBr')) montarBr();
+    var cores=corPres(), conta={}, com=0;
+    Array.prototype.forEach.call($('svgBr').querySelectorAll('path'),function(p){
+      var uf=p.getAttribute('data-uf'), m=dadosBr && dadosBr[uf], l=m && m.votos>0 && m.top[0];
+      p.setAttribute('class', uf===ufSel?'sel':'');
+      if(l && cores[l.n]){ var pc=num(l.pct); com++; conta[l.n]=(conta[l.n]||0)+1; p.style.fill=cores[l.n].cor; p.style.fillOpacity=pc>=60?1:pc>=52?.72:.46; }
+      else { p.style.fill=''; p.style.fillOpacity=''; }
+      var t=p.querySelector('title'); if(!t){ t=document.createElementNS('http://www.w3.org/2000/svg','title'); p.appendChild(t); }
+      t.textContent=(m?m.nome:uf.toUpperCase())+(l?' — '+l.nome+' '+l.pct+'%':'');
+    });
+    var s=$('svgBr').querySelector('path.sel'); if(s) $('svgBr').appendChild(s);
+    var lg=$('brLegenda'); lg.textContent='';
+    lg.appendChild(el('h3',null,'Presidente')); lg.appendChild(el('div','sub','Quem lidera em cada estado'));
+    var ul=el('ul','leg');
+    Object.keys(cores).sort(function(x,y){return (conta[y]||0)-(conta[x]||0)||Number(x)-Number(y)}).forEach(function(n){
+      if(!conta[n] && com) return;
+      var li=el('li'); var cx=el('span','cx'); cx.style.background=cores[n].cor; li.appendChild(cx);
+      var tx=el('span','nm',cores[n].nome+' '); tx.appendChild(el('small',null,cores[n].partido)); li.appendChild(tx);
+      li.appendChild(el('b',null,com?String(conta[n]||0):'—')); ul.appendChild(li);
+    });
+    lg.appendChild(ul);
+    lg.appendChild(el('div','nota',com?com+' de 27 unidades da federação com votos apurados (o exterior conta à parte). O número é a quantidade de estados em que lidera.':'Sem votos apurados ainda: o mapa ganha cor conforme os estados entram na apuração.'));
+    var esc=el('div','escala'); [['.46','lidera com menos de 52%'],['.72','de 52% a 60%'],['1','mais de 60%']].forEach(function(x){ var i=el('span'); var q=el('i'); q.style.opacity=x[0]; i.appendChild(q); i.appendChild(document.createTextNode(x[1])); esc.appendChild(i); });
+    lg.appendChild(esc);
+    detalheBr(ufSel);
+  }
+  function detalheBr(uf){
+    var box=$('brDetalhe'); box.textContent='';
+    var m=dadosBr && dadosBr[uf];
+    box.appendChild(el('h3',null,(m&&m.nome)||uf.toUpperCase()));
+    if(!m){ box.appendChild(el('div','sub',dadosBr?'Dados indisponíveis para este estado.':'Carregando…')); return; }
+    box.appendChild(el('div','sub',m.pctSecoes+'% das seções · '+nf.format(m.votos)+' votos válidos'));
+    var cores=corPres(), ol=el('ol');
+    m.top.forEach(function(c,i){
+      var li=el('li','c'+(m.votos>0&&i===0?' lider':''));
+      var fo=foto('f','br',c.sq); if(fo){ li.className+=' comft'; li.appendChild(fo); }
+      var nm=el('div','nome',c.nome+' '); nm.appendChild(el('span',null,c.partido)); li.appendChild(nm);
+      li.appendChild(el('div','pct',c.pct+'%')); li.appendChild(el('div','meta','')); li.appendChild(el('div','vt',nf.format(c.votos)+' votos'));
+      var tr=el('div','track'); var f=el('div','fill'); f.style.width=Math.min(100,num(c.pct))+'%'; if(cores[c.n]) f.style.background=cores[c.n].cor; tr.appendChild(f); li.appendChild(tr);
+      ol.appendChild(li);
+    });
+    box.appendChild(ol);
+    if(m.total>0) box.appendChild(el('div','cmpm','Abstenção '+m.pctAbstencao+'% · brancos e nulos '+pc(m.brancosNulos,m.total)));
+    var ex=dadosBr && dadosBr.zz; if(uf!=='zz' && ex && ex.votos>0 && ex.top[0]) box.appendChild(el('div','cmpm','Exterior: '+ex.top[0].nome+' '+ex.top[0].pct+'% ('+nf.format(ex.votos)+' válidos).'));
+  }
+  function buscarBr(){
+    var meu=++pedidoBr;
+    var pg = geoBr ? Promise.resolve(geoBr) : fetch('/br-mapa.json').then(function(r){return r.json()}).then(function(g){geoBr=g; return g});
+    Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa-br?parte='+p+qs(false),{cache:'no-store'}).then(function(r){ return r.ok?r.json():{estados:{}} }).catch(function(){return {estados:{}}}); })))
+    .then(function(r){ if(meu!==pedidoBr) return; var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length||!dadosBr) dadosBr=j; pintarBr(); }).catch(function(e){ console.error(e); });
+  }
+
   function kpi(box,l,v,d,pct,num){
     var k = el('div','kpi'); k.appendChild(el('div','l',l));
     k.appendChild(el('div','v'+(num?' num':''),v)); if(d) k.appendChild(el('div','d',d));
@@ -715,7 +795,7 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
   function desenhar(d){
     ultimo = d;
     resumo(d);
-    chips(); pintar(); buscarMapa();
+    chips(); pintar(); buscarMapa(); buscarBr();
     if(numConsulta && turno===1) consultarCand();
     MAJ.forEach(function(id){
       var b = d.blocos[id];
