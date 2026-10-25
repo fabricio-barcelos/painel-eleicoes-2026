@@ -231,6 +231,8 @@ table.cmp td small{display:block;color:var(--mute);font-size:11.5px}
 table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-weight:700}
 .mapa .virou{margin-top:10px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--warn-bg);font-size:13px}
 .mapa .cmpm{margin-top:10px;font-size:12.5px;color:var(--mute)}
+#regGraf{margin-top:14px}#regGraf svg{width:100%;height:auto;display:block;font-family:inherit}
+#regGraf .lg{display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;font-size:13px}#regGraf .lg span{display:inline-flex;align-items:center;gap:6px}#regGraf .lg i{width:22px;height:4px;border-radius:2px;display:inline-block}
 </style>
 </head>
 <body>
@@ -279,6 +281,10 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     <div class="lado" id="brLegenda"></div>
     <div class="palco" id="brPalco"><div class="vazio">Carregando o mapa…</div></div>
     <div class="lado" id="brDetalhe"></div>
+  </section>
+  <section class="card" id="secReg">
+    <div class="top"><div><h3>Presidente por região</h3><div class="sub" id="regSub">Percentual de cada candidato sobre os votos válidos da região; em cinza, quem não votou em candidato (abstenção, brancos e nulos) sobre o eleitorado</div></div></div>
+    <div id="regGraf"><div class="vazio">Aguardando os primeiros votos…</div></div>
   </section>
 
   <h2 class="t1">Consulta por número · Senador e Deputados</h2>
@@ -768,11 +774,42 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     if(m.total>0) box.appendChild(el('div','cmpm','Abstenção '+m.pctAbstencao+'% · brancos e nulos '+pc(m.brancosNulos,m.total)));
     var ex=dadosBr && dadosBr.zz; if(uf!=='zz' && ex && ex.votos>0 && ex.top[0]) box.appendChild(el('div','cmpm','Exterior: '+ex.top[0].nome+' '+ex.top[0].pct+'% ('+nf.format(ex.votos)+' válidos).'));
   }
+  var REGIOES=[['Norte','pa am ro to ac ap rr'],['Nordeste','ba pe ce ma pb rn al pi se'],['Centro-Oeste','go mt ms df'],['Sudeste','sp mg rj es'],['Sul','rs pr sc']];
+  function graficoRegioes(){
+    var box=$('regGraf'); if(!dadosBr) return;
+    var cores=corPres(), fin=(ultimo.blocos.presidenteBR.cands.slice(0,2)).map(function(c){return c.n}).filter(function(n){return cores[n]}); // só os dois primeiros
+    var ser=fin.map(function(n){return {n:n,nome:cores[n].nome,cor:cores[n].cor,v:[]}}), cinza={nome:'Abstenção, brancos e nulos',cor:'#999999',v:[]}, labels=[], temVoto=false;
+    REGIOES.forEach(function(r){
+      var ufs=r[1].split(' '), vv=0, ap=0, fora=0, porN={};
+      ufs.forEach(function(u){ var m=dadosBr[u]; if(!m) return; vv+=m.votos; ap+=m.aptos||0; fora+=(m.abstencao||0)+(m.brancosNulos||0); m.top.forEach(function(c){ porN[c.n]=(porN[c.n]||0)+c.votos; }); });
+      if(vv>0) temVoto=true;
+      labels.push(r[0]);
+      ser.forEach(function(s){ s.v.push(vv? (porN[s.n]||0)/vv*100 : null); });
+      cinza.v.push(ap? fora/ap*100 : null);
+    });
+    box.textContent='';
+    if(!temVoto){ box.appendChild(el('div','vazio','Aguardando os primeiros votos…')); return; }
+    var W=760,H=300,L=46,R=16,T=18,B=40, iw=W-L-R, ih=H-T-B, NS='http://www.w3.org/2000/svg';
+    var svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('role','img'); svg.setAttribute('aria-label','Percentual por região');
+    function X(i){return L+iw*(i+.5)/labels.length} function Y(p){return T+ih*(1-p/100)}
+    function mk(t,a){var e=document.createElementNS(NS,t); Object.keys(a).forEach(function(k){e.setAttribute(k,a[k])}); return e}
+    [0,20,40,60,80,100].forEach(function(p){ svg.appendChild(mk('line',{x1:L,x2:W-R,y1:Y(p),y2:Y(p),stroke:p?'#e6e2d8':'#999',"stroke-width":1})); var t=mk('text',{x:L-8,y:Y(p)+4,"text-anchor":'end',"font-size":11,fill:'#777'}); t.textContent=p+'%'; svg.appendChild(t); });
+    labels.forEach(function(l,i){ var t=mk('text',{x:X(i),y:H-14,"text-anchor":'middle',"font-size":12.5,"font-weight":700,fill:'#333'}); t.textContent=l; svg.appendChild(t); });
+    ser.concat([cinza]).forEach(function(s){
+      var pts=s.v.map(function(v,i){return v==null?null:[X(i),Y(v)]}).filter(Boolean); if(!pts.length) return;
+      svg.appendChild(mk('path',{d:'M'+pts.map(function(p){return p[0]+','+p[1]}).join('L'),fill:'none',stroke:s.cor,"stroke-width":3,"stroke-linejoin":'round'}));
+      s.v.forEach(function(v,i){ if(v==null) return; svg.appendChild(mk('circle',{cx:X(i),cy:Y(v),r:4.5,fill:s.cor,stroke:'#fff',"stroke-width":1.5}));
+        var acima=ser.concat([cinza]).every(function(o){ return o===s || o.v[i]==null || o.v[i]<=v || Math.abs(Y(o.v[i])-Y(v))>18; });
+        var t=mk('text',{x:X(i),y:acima?Y(v)-9:Y(v)+18,"text-anchor":'middle',"font-size":11.5,"font-weight":700,fill:s.cor}); t.textContent=v.toFixed(1).replace('.',',')+'%'; svg.appendChild(t); });
+    });
+    box.appendChild(svg);
+    var lg=el('div','lg'); ser.concat([cinza]).forEach(function(s){ var sp=el('span'); var i=el('i'); i.style.background=s.cor; sp.appendChild(i); sp.appendChild(document.createTextNode(s.nome)); lg.appendChild(sp); }); box.appendChild(lg);
+  }
   function buscarBr(){
     var meu=++pedidoBr;
     var pg = geoBr ? Promise.resolve(geoBr) : fetch('/br-mapa.json').then(function(r){return r.json()}).then(function(g){geoBr=g; return g});
     Promise.all([pg].concat([1,2].map(function(p){ return fetch('/api/mapa-br?parte='+p+qs(false),{cache:'no-store'}).then(function(r){ return r.ok?r.json():{estados:{}} }).catch(function(){return {estados:{}}}); })))
-    .then(function(r){ if(meu!==pedidoBr) return; var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length||!dadosBr) dadosBr=j; pintarBr(); }).catch(function(e){ console.error(e); });
+    .then(function(r){ if(meu!==pedidoBr) return; var j={}; [r[1],r[2]].forEach(function(x){ Object.keys(x.estados).forEach(function(k){ j[k]=x.estados[k]; }); }); if(Object.keys(j).length||!dadosBr) dadosBr=j; pintarBr(); graficoRegioes(); }).catch(function(e){ console.error(e); });
   }
 
   function kpi(box,l,v,d,pct,num){
