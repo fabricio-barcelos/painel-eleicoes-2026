@@ -2,6 +2,7 @@
 // por cidade e país, e grava t2/exterior.json no R2. Roda a cada ~10 min (workflow exterior.yml).
 // Motivo: o TSE só totaliza o exterior depois das 17h, mas publica os BUs assim que cada seção encerra.
 import { lerBU } from './lib/bu.mjs';
+import { PAISES } from './lib/paises.mjs';
 import { createHash } from 'node:crypto';
 
 const { CF_ACCOUNT_ID, CF_API_TOKEN } = process.env;
@@ -42,7 +43,17 @@ async function passada() {
   }
   const tot = { secoes: jobs.length, recebidas: lidas, aptos: 0, comp: 0, br: 0, nu: 0, v: {} };
   for (const c of Object.values(porCidade)) { tot.aptos += c.aptos; tot.comp += c.comp; tot.br += c.br; tot.nu += c.nu; for (const [n, q] of Object.entries(c.v)) tot.v[n] = (tot.v[n] || 0) + q; }
-  return { atualizado: new Date().toISOString(), fonte: 'boletins de urna (parcial, antes da totalização do TSE)', cands, total: tot, cidades: porCidade };
+  // agrega por país e por continente
+  const paises = {}, continentes = {};
+  const soma = (d, c) => { d.secoes += c.secoes; d.recebidas += c.recebidas; d.aptos += c.aptos; d.comp += c.comp; d.br += c.br; d.nu += c.nu; for (const [n, q] of Object.entries(c.v)) d.v[n] = (d.v[n] || 0) + q; };
+  const novo = (nome, extra) => ({ nome, ...extra, secoes: 0, recebidas: 0, aptos: 0, comp: 0, br: 0, nu: 0, v: {} });
+  for (const c of Object.values(porCidade)) {
+    const [pais, cont] = PAISES[c.nome] || ['—', '—'];
+    soma(paises[pais] ||= novo(pais, { continente: cont, cidades: 0 }), c); paises[pais].cidades++;
+    soma(continentes[cont] ||= novo(cont, { paises: 0 }), c);
+  }
+  for (const p of Object.values(paises)) continentes[p.continente].paises++;
+  return { atualizado: new Date().toISOString(), fonte: 'boletins de urna (parcial, antes da totalização do TSE)', cands, total: tot, continentes, paises };
 }
 const fim = Date.now() + DURACAO * 1000;
 do {
