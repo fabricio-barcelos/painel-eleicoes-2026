@@ -231,6 +231,8 @@ table.cmp td small{display:block;color:var(--mute);font-size:11.5px}
 table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-weight:700}
 .mapa .virou{margin-top:10px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--warn-bg);font-size:13px}
 .mapa .cmpm{margin-top:10px;font-size:12.5px;color:var(--mute)}
+#extCorpo{margin-top:12px}#extCorpo .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}#extCorpo .k{border:1px solid var(--line);border-radius:10px;padding:10px 12px}#extCorpo .k small{display:block;font:500 10.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}#extCorpo .k b{font-size:20px}#extCorpo .k i{font-style:normal;color:var(--mute);font-size:12px}
+#extCorpo table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}#extCorpo th{text-align:left;font:700 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:6px 4px;border-bottom:1px solid var(--line)}#extCorpo td{padding:6px 4px;border-bottom:1px solid var(--line)}#extCorpo .r{text-align:right}#extCorpo th.r{text-align:right}
 </style>
 </head>
 <body>
@@ -279,6 +281,10 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     <div class="lado" id="brLegenda"></div>
     <div class="palco" id="brPalco"><div class="vazio">Carregando o mapa…</div></div>
     <div class="lado" id="brDetalhe"></div>
+  </section>
+  <section class="card" id="secExt" hidden>
+    <div class="top"><div><h3>Voto no exterior · boletins de urna</h3><div class="sub">Soma dos boletins já publicados pelo TSE nas seções do exterior que encerraram a votação. Parcial e não oficial: o TSE só totaliza o exterior após as 17h.</div></div><span class="tag neutro" id="extTag">Parcial</span></div>
+    <div id="extCorpo"></div>
   </section>
 
   <h2 class="t1">Consulta por número · Senador e Deputados</h2>
@@ -768,6 +774,28 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
     if(m.total>0) box.appendChild(el('div','cmpm','Abstenção '+m.pctAbstencao+'% · brancos e nulos '+pc(m.brancosNulos,m.total)));
     var ex=dadosBr && dadosBr.zz; if(uf!=='zz' && ex && ex.votos>0 && ex.top[0]) box.appendChild(el('div','cmpm','Exterior: '+ex.top[0].nome+' '+ex.top[0].pct+'% ('+nf.format(ex.votos)+' válidos).'));
   }
+  var extAberto=false;
+  function exterior(){
+    if(turno!==2){ $('secExt').hidden=true; return; }
+    fetch('/api/exterior',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+      var sec=$('secExt'), box=$('extCorpo'); if(!j||!j.total||!j.total.comp){ sec.hidden=true; return; }
+      sec.hidden=false; box.textContent='';
+      var t=j.total, cores=corPres(), vv=Object.keys(t.v).reduce(function(s,n){return s+t.v[n]},0), ord=Object.keys(t.v).sort(function(a,b){return t.v[b]-t.v[a]});
+      var k=el('div','kpis');
+      ord.forEach(function(n){ var c=j.cands[n]||{nome:n,partido:''}; var d=el('div','k'); d.appendChild(el('small',null,c.nome+' · '+c.partido)); var b=el('b',null,vv?(t.v[n]/vv*100).toFixed(1).replace('.',',')+'%':'—'); b.style.color=(cores[n]&&cores[n].cor)||'inherit'; d.appendChild(b); d.appendChild(el('i',null,' '+nf.format(t.v[n])+' votos')); k.appendChild(d); });
+      var d2=el('div','k'); d2.appendChild(el('small',null,'Seções com boletim')); d2.appendChild(el('b',null,nf.format(t.recebidas))); d2.appendChild(el('i',null,' de '+nf.format(t.secoes))); k.appendChild(d2);
+      var d3=el('div','k'); d3.appendChild(el('small',null,'Compareceram')); d3.appendChild(el('b',null,nf.format(t.comp))); d3.appendChild(el('i',null,' brancos '+nf.format(t.br)+' · nulos '+nf.format(t.nu))); k.appendChild(d3);
+      box.appendChild(k);
+      var cid=Object.keys(j.cidades).map(function(c){return j.cidades[c]}).filter(function(c){return c.recebidas>0}).sort(function(a,b){return b.comp-a.comp});
+      var lim=extAberto?cid.length:12, tb=el('table'), hd=el('thead'), hr=el('tr');
+      ['Cidade','Seções'].concat(ord.map(function(n){return (j.cands[n]||{nome:n}).nome})).concat(['Votantes']).forEach(function(x,i){ hr.appendChild(el('th',i?'r':null,x)); }); hd.appendChild(hr); tb.appendChild(hd);
+      var co=el('tbody');
+      cid.slice(0,lim).forEach(function(c){ var tr=el('tr'); tr.appendChild(el('td',null,c.nome)); tr.appendChild(el('td','r',c.recebidas+'/'+c.secoes)); var cv=ord.reduce(function(s,n){return s+(c.v[n]||0)},0); ord.forEach(function(n){ var td=el('td','r',nf.format(c.v[n]||0)+(cv?' ('+((c.v[n]||0)/cv*100).toFixed(0)+'%)':'')); if(cv && (c.v[n]||0)===Math.max.apply(null,ord.map(function(m){return c.v[m]||0}))) td.style.fontWeight='700'; tr.appendChild(td); }); tr.appendChild(el('td','r',nf.format(c.comp))); co.appendChild(tr); });
+      tb.appendChild(co); box.appendChild(tb);
+      if(cid.length>12){ var bt=el('button','mais',extAberto?'Mostrar menos':'Ver as '+cid.length+' cidades'); bt.type='button'; bt.onclick=function(){extAberto=!extAberto; exterior();}; box.appendChild(bt); }
+      box.appendChild(el('div','sub prox','Atualizado '+(j.atualizado?new Date(j.atualizado).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}):'')+' · seções que não aparecem ainda não encerraram ou não publicaram boletim.'));
+    }).catch(function(){});
+  }
   function buscarBr(){
     var meu=++pedidoBr;
     var pg = geoBr ? Promise.resolve(geoBr) : fetch('/br-mapa.json').then(function(r){return r.json()}).then(function(g){geoBr=g; return g});
@@ -795,7 +823,7 @@ table.cmp .up{color:#1E7E3A;font-weight:700}table.cmp .dn{color:#B3261E;font-wei
   function desenhar(d){
     ultimo = d;
     resumo(d);
-    chips(); pintar(); buscarMapa(); buscarBr();
+    chips(); pintar(); buscarMapa(); buscarBr(); exterior();
     if(numConsulta && turno===1) consultarCand();
     MAJ.forEach(function(id){
       var b = d.blocos[id];

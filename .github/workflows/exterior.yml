@@ -1,0 +1,23 @@
+name: Coletor exterior (BU) -> R2
+# Soma os boletins de urna do exterior a cada 10 min e grava t2/exterior.json no R2.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '35 */5 * * *'
+concurrency:
+  group: exterior
+  cancel-in-progress: false
+jobs:
+  exterior:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/exterior.mjs 20400 600
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || '9dedc69fe409cd6b18da221e111e83cf' }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_R2_BUCKET: tse-eleicoes-2026
