@@ -1,5 +1,5 @@
 // GET /api/mapa-br?parte=1|2 — Presidente por estado (27 UFs + exterior), líder e os dois primeiros.
-// Lê o KV (coletor) como as demais; 60 s em cache na borda.
+// Lê o R2 (coletor) como as demais; 60 s em cache na borda.
 import { urlArquivo, baixar, usarKV, resolverTurno } from './painel.js';
 
 const TTL = 60;

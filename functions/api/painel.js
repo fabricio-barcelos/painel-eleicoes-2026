@@ -117,17 +117,34 @@ export function urlArquivo(fonte, tipo, abr, cargo, turno) {
   return `${f.base}/${ele}/dados/${abr.slice(0, 2)}/${abr}-c${cargo}-e${pad6(ele)}-u.json`;
 }
 
-// Espelho dos arquivos do TSE no KV da Cloudflare (binding TSE), alimentado por .github/workflows/coletor.yml.
-// Necessário desde 25/10/2026: o TSE (Akamai) responde 403 às bordas da Cloudflare. Sem KV, busca direto.
-let KV = null;
-export function usarKV(env) { KV = env && env.TSE ? env.TSE : null; }
-const chaveKV = (url) => url.replace('https://resultados.tse.jus.br/', '');
+// Espelho dos arquivos do TSE no R2 da Cloudflare (binding R2), em pacotes gravados por tools/coletor.mjs.
+// Necessário desde 25/10/2026: o TSE (Akamai) responde 403 às bordas da Cloudflare. Sem o binding, busca direto.
+let R2 = null;
+const pacotesEmMemoria = {}; // nome -> { quando, dados }
+export function usarKV(env) { R2 = env && env.R2 ? env.R2 : null; }
+export const usarR2 = usarKV;
+function pacoteDe(url) {
+  const m = url.match(/ele2026\/(\d+)\/dados\/\w\w\/(\w\w)(\d*)-c(\d+)-/);
+  if (!m) return null;
+  const t = m[1] === '6258' || m[1] === '6260' ? 't2' : 't1';
+  if (!m[3]) return `${t}/estaduais.json`;
+  return m[4] === '0001' ? `${t}/mun-presidente.json` : `${t}/mun-governador.json`;
+}
+async function lerPacote(nome) {
+  const p = pacotesEmMemoria[nome];
+  if (p && Date.now() - p.quando < 15000) return p.dados; // mesma isolate, mesmo pedido: lê o R2 uma vez
+  const promessa = R2.get(nome).then((o) => (o ? o.json() : null)).catch(() => null);
+  pacotesEmMemoria[nome] = { quando: Date.now(), dados: promessa };
+  return promessa;
+}
 
 export async function baixar(url) {
-  if (KV) {
+  if (R2) {
     try {
-      const txt = await KV.get(chaveKV(url), 'text');
-      if (txt) return { dados: JSON.parse(txt) };
+      const nome = pacoteDe(url);
+      const pac = nome && (await lerPacote(nome));
+      const chave = url.replace('https://resultados.tse.jus.br/', '');
+      if (pac && pac[chave]) return { dados: pac[chave] };
     } catch (e) { /* cai na busca direta */ }
   }
   try {
