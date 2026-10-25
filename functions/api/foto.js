@@ -14,13 +14,12 @@ export async function onRequestGet({ request, env, waitUntil }) {
   const chave = new Request(`https://painel.interno/foto/${t}/${uf}/${sq}`);
   if (cache) { const pronto = await cache.match(chave); if (pronto) return pronto; }
 
-  // Foto espelhada no KV pelo coletor (chave oficial/ele2026/<ele>/fotos/<uf>/<sq>.jpeg, em base64).
-  if (env && env.TSE) {
+  // Foto espelhada no R2 pelo coletor (objeto oficial/ele2026/<ele>/fotos/<uf>/<sq>.jpeg).
+  if (env && env.R2) {
     try {
-      // O coletor grava a foto em binário (bulk com base64:true decodifica ao gravar); lê-se como arrayBuffer.
-      const bin = await env.TSE.get(`oficial/ele2026/${ELE[t]}/fotos/${uf}/${sq}.jpeg`, 'arrayBuffer');
-      if (bin && bin.byteLength > 0) {
-        const resp = new Response(bin, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=604800' } });
+      const o = await env.R2.get(`oficial/ele2026/${ELE[t]}/fotos/${uf}/${sq}.jpeg`);
+      if (o) {
+        const resp = new Response(o.body, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=604800' } });
         if (cache) { const p = cache.put(chave, resp.clone()); if (waitUntil) waitUntil(p); else await p; }
         return resp;
       }
