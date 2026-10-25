@@ -14,7 +14,8 @@ const pad6 = (n) => String(n).padStart(6, '0');
 const arq = (ele, abr, cargo) => `oficial/ele2026/${ele}/dados/${abr.slice(0, 2)}/${abr}-c${cargo}-e${pad6(ele)}-u.json`;
 
 // 2º turno (muda a cada 30 s): 3 arquivos estaduais + 156 municipais.
-const T2 = [arq('6258', 'br', '0001'), arq('6258', 'es', '0001'), arq('6260', 'es', '0003')]
+const UFS = 'ac al am ap ba ce df es go ma mg ms mt pa pb pe pi pr rj rn ro rr rs sc se sp to zz'.split(' ');
+const T2 = [arq('6258', 'br', '0001'), arq('6260', 'es', '0003')].concat(UFS.map((uf) => arq('6258', uf, '0001')))
   .concat(cds.flatMap((cd) => [arq('6258', 'es' + cd, '0001'), arq('6260', 'es' + cd, '0003')]));
 // 1º turno (resultado final, não muda): sobe uma vez por execução.
 const T1 = [arq('6257', 'br', '0001'), arq('6257', 'es', '0001'), arq('6259', 'es', '0003'), arq('6259', 'es', '0005'), arq('6259', 'es', '0006'), arq('6259', 'es', '0007')]
